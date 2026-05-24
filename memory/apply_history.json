@@ -1,0 +1,66 @@
+[
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "135ecca5",
+    "title": "מחק Lesson 135ecca5 - כלל Breakout resistance שנכשל בפועל",
+    "applied_at": "2026-05-24T14:19:02.102481"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "2db3e2a6",
+    "rule": "הוסף לקח חדש: 'Breakout LONG = וטו מוחלט. אסור להיכנס בשום מקרה, בלי קשר לאינדיקטורים אחרים. היסטוריה: 0 מתוך 2 הצלחות, הפסדים עד -48%.'",
+    "applied_at": "2026-05-24T14:19:02.103292"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "3307c843",
+    "rule": "הוסף לקח: 'Pullback LONG עם הנתונים הבאים = דחייה: (א) עמקות >40% מהמהלך הראשוני, או (ב) 3+ דחיות ברציפות מהפתיחה באותו נר ללא השבת מחיר מעבר להתנגדות הקודמת.'",
+    "applied_at": "2026-05-24T14:19:02.104541"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "המדגם סטטיסטי קטן מדי. כל lesson נבדק רק ב-2 invocations (2/2 correct). 100% accuracy על 2 מקרים בלבד היא בעלת value סטטיסטי נמוך מדי וקופצת ממדויקת וקרובה מדי לrandom chance. בנוסף: נתונים מלאים רק ל",
+    "rec_title": "הגבהת confidence לארבעה לקחים בעלי 100% accuracy",
+    "applied_at": "2026-05-24T14:19:22.221213"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "8d5ec4a6",
+    "applied_at": "2026-05-24T14:19:46.322177"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "6591eb06",
+    "title": "מחק Lesson 6591eb06 - טקסט לחלוטין לא שמיש",
+    "applied_at": "2026-05-24T14:43:28.158778"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "05358c81",
+    "title": "מחק Lesson 05358c81 - טקסט לא הגיוני מתמטית",
+    "applied_at": "2026-05-24T14:43:28.159572"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "21de0066",
+    "applied_at": "2026-05-24T14:43:28.160482"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "2db3e2a6",
+    "applied_at": "2026-05-24T14:43:28.161362"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "3307c843",
+    "applied_at": "2026-05-24T14:43:28.162324"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "מינימום 3 דוגמאות נדרש לאישור. בנתונים המסופקים: דוגמה אחת בלבד (trade b0192209 עם -6.5%). בנוסף, נתונים סטטיסטיים = {} (ריק לחלוטין). לא קיימת בסיס דאטה מספיק לקבלת החלטה.",
+    "rec_title": "הוסף לקח חדש - Bounce SHORT זה וטו בBTCUSDT 15m",
+    "applied_at": "2026-05-24T14:43:44.075846"
+  }
+]

@@ -1,0 +1,32 @@
+# סיסמאות ומפתחות - לעולם לא ב-Git!
+.env
+*.env.local
+memory/authorized_chat_id.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# מסדי נתונים בינאריים (לא ב-Git, רק JSON)
+memory/*.db
+
+# לוגים
+logs/*.log
+logs/*.json
+logs/session_*.log
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# קבצים זמניים
+*.tmp
+*.swp
+*~
+
+# קבצי גיבוי ישנים
+memory/*.OLD.json
