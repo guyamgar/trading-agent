@@ -3,7 +3,7 @@
 """
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 from config import MEMORY_DIR, TRADES_FILE, LESSONS_FILE, ACCOUNT_FILE, RISK_PER_TRADE_PCT
@@ -146,6 +146,49 @@ def relevant_lessons(market_summary: Dict, limit: int = 10, min_confidence: int 
     return lessons[-limit:]
 
 
+COST_LOG_FILE = MEMORY_DIR / "cost_log.json"
+
+
+def log_llm_cost(amount_usd: float) -> None:
+    """מתעד עלות של קריאת LLM ליום הנוכחי."""
+    if amount_usd <= 0:
+        return
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    data = {}
+    if COST_LOG_FILE.exists():
+        try:
+            data = json.loads(COST_LOG_FILE.read_text())
+        except Exception:
+            data = {}
+    daily = data.get("daily", {})
+    daily[today] = round(daily.get(today, 0) + amount_usd, 4)
+    data["daily"] = daily
+    data["total"] = round(data.get("total", 0) + amount_usd, 4)
+    COST_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    COST_LOG_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def get_cost_summary() -> Dict:
+    """מחזיר סיכום עלויות - היום, אתמול, חודש."""
+    if not COST_LOG_FILE.exists():
+        return {"today": 0, "yesterday": 0, "this_month": 0, "total": 0}
+    try:
+        data = json.loads(COST_LOG_FILE.read_text())
+    except Exception:
+        return {"today": 0, "yesterday": 0, "this_month": 0, "total": 0}
+    daily = data.get("daily", {})
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    yesterday = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
+    month_prefix = today[:7]
+    this_month = sum(v for k, v in daily.items() if k.startswith(month_prefix))
+    return {
+        "today": daily.get(today, 0),
+        "yesterday": daily.get(yesterday, 0),
+        "this_month": round(this_month, 2),
+        "total": data.get("total", 0),
+    }
+
+
 def get_stats() -> Dict:
     """
     מסכם סטטיסטיקות בסיסיות מההיסטוריה.
@@ -276,8 +319,12 @@ def update_account_after_trade(pnl_pct: float, won: bool) -> Dict:
 
 def check_advance_readiness() -> Dict:
     """
-    בודק אם המערכת מוכנה לעבור לשלב הבא לפי קריטריונים סטטיסטיים.
-    החזרה: {ready: bool, criteria: dict, summary: str}
+    בודק אם המערכת מוכנה לעבור לשלב הבא.
+    קריטריונים לפי שלב נוכחי:
+    - שלב 1 → 2:  30+ עסקאות, PF ≥ 1.5, WR ≥ 50%, DD < 15%
+    - שלב 2 → 3:  קריטריונים מקסימליים (כסף אמיתי - דורש ביטחון מלא)
+                  50+ עסקאות בשלב 2 (בלייב!), PF ≥ 1.8, WR ≥ 55%, DD < 10%
+                  + ניסיון של לפחות 7 ימים בשלב 2
     """
     stats = get_stats()
     acc = load_account()
@@ -285,25 +332,51 @@ def check_advance_readiness() -> Dict:
     pf = stats.get("profit_factor")
     if pf is None:
         pf = 0
+    win_rate = stats.get("win_rate_pct", 0)
 
-    # Drawdown נוכחי מהשיא
     if acc["highest_balance"] > 0:
         drawdown_pct = (acc["highest_balance"] - acc["current_balance"]) / acc["highest_balance"] * 100
     else:
         drawdown_pct = 0
 
-    criteria = {
-        "trades_30plus": {"value": closed, "target": 30, "met": closed >= 30},
-        "profit_factor_15plus": {"value": pf, "target": 1.5, "met": pf >= 1.5},
-        "win_rate_50plus": {"value": stats.get("win_rate_pct", 0), "target": 50,
-                            "met": stats.get("win_rate_pct", 0) >= 50},
-        "drawdown_under_15": {"value": round(drawdown_pct, 1), "target": 15,
-                              "met": drawdown_pct < 15},
-    }
+    current_stage = acc.get("stage", 1)
+
+    if current_stage == 1:
+        # שלב 1 → 2: רק להוכיח Edge בסיסי
+        criteria = {
+            "trades_30plus": {"value": closed, "target": 30, "met": closed >= 30},
+            "profit_factor_15plus": {"value": pf, "target": 1.5, "met": pf >= 1.5},
+            "win_rate_50plus": {"value": win_rate, "target": 50, "met": win_rate >= 50},
+            "drawdown_under_15": {"value": round(drawdown_pct, 1), "target": 15,
+                                  "met": drawdown_pct < 15},
+        }
+    else:
+        # שלב 2 → 3: קריטריונים מקסימליים לכסף אמיתי
+        # סופרים רק עסקאות שנעשו בלייב (stage 2+)
+        live_trades = sum(1 for t in load_trades()
+                          if t.get("status") == "closed" and t.get("live_mode"))
+
+        # ימים מהתחלת שלב 2
+        try:
+            stage_started = datetime.fromisoformat(acc.get("stage_started_at", ""))
+            days_in_stage = (datetime.utcnow() - stage_started).days
+        except Exception:
+            days_in_stage = 0
+
+        criteria = {
+            "live_trades_50plus": {"value": live_trades, "target": 50,
+                                    "met": live_trades >= 50},
+            "profit_factor_18plus": {"value": pf, "target": 1.8, "met": pf >= 1.8},
+            "win_rate_55plus": {"value": win_rate, "target": 55, "met": win_rate >= 55},
+            "drawdown_under_10": {"value": round(drawdown_pct, 1), "target": 10,
+                                  "met": drawdown_pct < 10},
+            "days_7plus": {"value": days_in_stage, "target": 7, "met": days_in_stage >= 7},
+        }
 
     all_met = all(c["met"] for c in criteria.values())
     return {
         "ready": all_met,
+        "stage": current_stage,
         "criteria": criteria,
         "summary": f"{sum(1 for c in criteria.values() if c['met'])}/{len(criteria)} קריטריונים עומדים",
     }

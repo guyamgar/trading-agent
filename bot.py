@@ -558,19 +558,28 @@ Win Rate: {wr:.1f}%
     # מעבר לקריטריונים סטטיסטיים במקום יעד יתרה
     from memory_store import check_advance_readiness
     readiness = check_advance_readiness()
-    msg += "\n\n*🎯 קריטריונים למעבר לשלב הבא:*\n"
+    next_stage_name = {1: "שלב 2 (live data)", 2: "שלב 3 (כסף אמיתי!)"}.get(readiness["stage"], "?")
+    msg += f"\n\n*🎯 קריטריונים למעבר ל{next_stage_name}:*\n"
     labels = {
         "trades_30plus": ("30+ עסקאות", lambda v: f"{v}/30"),
         "profit_factor_15plus": ("PF ≥ 1.5", lambda v: f"{v:.2f}"),
         "win_rate_50plus": ("Win Rate ≥ 50%", lambda v: f"{v}%"),
         "drawdown_under_15": ("Drawdown < 15%", lambda v: f"{v}%"),
+        "live_trades_50plus": ("50+ עסקאות בלייב", lambda v: f"{v}/50"),
+        "profit_factor_18plus": ("PF ≥ 1.8 (קשוח!)", lambda v: f"{v:.2f}"),
+        "win_rate_55plus": ("Win Rate ≥ 55%", lambda v: f"{v}%"),
+        "drawdown_under_10": ("Drawdown < 10%", lambda v: f"{v}%"),
+        "days_7plus": ("7+ ימים בשלב 2", lambda v: f"{v} ימים"),
     }
     for key, c in readiness["criteria"].items():
         mark = "✅" if c["met"] else "❌"
         label, fmt = labels.get(key, (key, str))
         msg += f"{mark} {label}: {fmt(c['value'])}\n"
     if readiness["ready"]:
-        msg += "\n🎉 *מוכן ל-/advance!*"
+        if readiness["stage"] == 2:
+            msg += "\n⚠️ מוכן ללייב אמיתי - **אבל מומלץ להמשיך עוד כדי לצבור יותר ביטחון**"
+        else:
+            msg += "\n🎉 *מוכן ל-/advance!*"
 
     send_message(chat_id, msg, parse_mode="")
 
@@ -695,77 +704,223 @@ def cmd_live_status(chat_id: int):
 
 
 def _daily_summary_loop():
-    """כל יום ב-23:00 שעון ישראל - שולח תקציר יומי לטלגרם."""
+    """כל יום ב-05:00 בוקר שעון ישראל - שולח תקציר 24 שעות אחרונות + השוואה ליום קודם."""
+    from datetime import timedelta
     last_sent_date = None
     while True:
         try:
-            time.sleep(60)  # בודק כל דקה
+            time.sleep(60)
             now = datetime.now()
             today_str = now.strftime("%Y-%m-%d")
-            # רץ ב-23:00-23:01 פעם אחת ביום
-            if now.hour == 23 and now.minute == 0 and last_sent_date != today_str:
+            yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+            # 05:30 - גיבוי יומי לGit (אחרי הסיכום)
+            if now.hour == 5 and now.minute == 30:
+                try:
+                    backup_script = ROOT / "scripts" / "backup_to_git.sh"
+                    if backup_script.exists():
+                        proc = subprocess.run(
+                            ["/bin/bash", str(backup_script)],
+                            cwd=str(ROOT), capture_output=True, text=True, timeout=120,
+                        )
+                        auth_chat = get_authorized_chat_id()
+                        if auth_chat and proc.returncode == 0:
+                            send_message(auth_chat, f"💾 גיבוי יומי לGitHub הושלם", parse_mode="")
+                except Exception as e:
+                    print(f"backup error: {e}")
+
+            # 05:00 - תקציר בוקר
+            if now.hour == 5 and now.minute == 0 and last_sent_date != today_str:
                 last_sent_date = today_str
                 authorized = get_authorized_chat_id()
                 if not authorized:
                     continue
 
-                # מסנן עסקאות היום
                 trades = load_trades()
-                today_trades = [t for t in trades
-                                if t.get("status") == "closed"
-                                and t.get("session") == today_str
-                                and t.get("live_mode")]
-
-                wins = [t for t in today_trades if (t.get("simulation") or {}).get("pnl_pct", 0) > 0]
-                losses = [t for t in today_trades if (t.get("simulation") or {}).get("pnl_pct", 0) <= 0]
-                net_pnl = sum((t.get("simulation") or {}).get("pnl_pct", 0) for t in today_trades)
-
-                # לקחים חדשים היום
                 lessons = load_lessons()
-                today_lessons = [l for l in lessons
-                                 if l.get("created_at", "").startswith(today_str)]
-
-                # המלצות פתוחות
-                open_recs = load_open_recs()
-
                 acc = load_account()
                 stats = get_stats()
+                open_recs = load_open_recs()
 
-                msg = f"""🌙 *תקציר יומי - {today_str}*
+                # מסנן 24 שעות אחרונות (closed עם live_mode)
+                cutoff_24h = now - timedelta(hours=24)
+                cutoff_48h = now - timedelta(hours=48)
 
-💰 *חשבון:*
+                def trade_time(t):
+                    ts = (t.get("updated_at") or t.get("created_at") or "")
+                    try:
+                        return datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+                    except Exception:
+                        return now
+
+                last_24h = [t for t in trades
+                            if t.get("status") == "closed" and t.get("live_mode")
+                            and trade_time(t) >= cutoff_24h]
+                prior_24h = [t for t in trades
+                             if t.get("status") == "closed" and t.get("live_mode")
+                             and cutoff_48h <= trade_time(t) < cutoff_24h]
+
+                wins_today = [t for t in last_24h if (t.get("simulation") or {}).get("pnl_pct", 0) > 0]
+                losses_today = [t for t in last_24h if (t.get("simulation") or {}).get("pnl_pct", 0) <= 0]
+                pnl_today = sum((t.get("simulation") or {}).get("pnl_pct", 0) for t in last_24h)
+
+                wins_prior = [t for t in prior_24h if (t.get("simulation") or {}).get("pnl_pct", 0) > 0]
+                pnl_prior = sum((t.get("simulation") or {}).get("pnl_pct", 0) for t in prior_24h)
+
+                wr_today = len(wins_today) / max(len(last_24h), 1) * 100
+                wr_prior = len(wins_prior) / max(len(prior_24h), 1) * 100
+
+                # לקחים חדשים ב-24 שעות
+                today_lessons = [l for l in lessons
+                                 if l.get("created_at", "") >= cutoff_24h.isoformat()]
+
+                # השוואות
+                def diff_arrow(curr, prev):
+                    if prev == 0:
+                        return ""
+                    if curr > prev:
+                        return f"📈 (+{curr - prev:.1f})"
+                    elif curr < prev:
+                        return f"📉 ({curr - prev:.1f})"
+                    return "➖"
+
+                # בניית הודעה
+                msg = f"""☀️ *בוקר טוב! סיכום הלילה*
+📅 {today_str}
+
+💰 *החשבון שלך:*
 • יתרה: ${acc['current_balance']:,.2f}
-• שינוי היום: {net_pnl:+.2f}%
-• מצטבר (שלב {acc['stage']}): ${acc['current_balance'] - acc['starting_balance']:+,.2f}
+• שינוי 24h: {pnl_today:+.2f}%
+• מצטבר בשלב {acc['stage']}: ${acc['current_balance'] - acc['starting_balance']:+,.2f}
 
-📊 *פעילות היום:*
-• המלצות נסגרו: {len(today_trades)} ({len(wins)}W / {len(losses)}L)
-• Win Rate היום: {(len(wins) / max(len(today_trades), 1) * 100):.0f}%
-• המלצות עדיין פתוחות: {len(open_recs)}
+📊 *פעילות 24 שעות אחרונות:*
+• המלצות שנסגרו: {len(last_24h)} (אתמול: {len(prior_24h)})
+• ניצחונות: {len(wins_today)} (אתמול: {len(wins_prior)})
+• הפסדים: {len(losses_today)} (אתמול: {len(prior_24h) - len(wins_prior)})
+• Win Rate: {wr_today:.0f}% {diff_arrow(wr_today, wr_prior)} (אתמול {wr_prior:.0f}%)
+• P/L: {pnl_today:+.2f}% (אתמול {pnl_prior:+.2f}%)
 
 🧠 *למידה:*
 • לקחים חדשים: {len(today_lessons)}
+• סה"כ לקחים: {len(lessons)}
 
 🎯 *סטטוס כללי:*
-• עסקאות סגורות בסה"כ: {stats.get('closed_trades', 0)}
+• סה"כ עסקאות סגורות: {stats.get('closed_trades', 0)}
 • Win Rate כללי: {stats.get('win_rate_pct', 0)}%
-• Profit Factor: {stats.get('profit_factor', '?')}"""
+• Profit Factor: {stats.get('profit_factor', '?')}
+• המלצות פתוחות כעת: {len(open_recs)}"""
 
-                if today_trades:
-                    best = max(today_trades, key=lambda t: (t.get("simulation") or {}).get("pnl_pct", 0))
-                    worst = min(today_trades, key=lambda t: (t.get("simulation") or {}).get("pnl_pct", 0))
+                if last_24h:
+                    best = max(last_24h, key=lambda t: (t.get("simulation") or {}).get("pnl_pct", 0))
+                    worst = min(last_24h, key=lambda t: (t.get("simulation") or {}).get("pnl_pct", 0))
                     msg += f"""
 
-✨ *הטוב/הרע ביותר:*
-🏆 ניצחון: {best.get('hunter_setup', {}).get('סוג')} {best.get('decision', {}).get('החלטה')} ({(best.get('simulation') or {}).get('pnl_pct', 0):+.2f}%)
-💔 הפסד: {worst.get('hunter_setup', {}).get('סוג')} {worst.get('decision', {}).get('החלטה')} ({(worst.get('simulation') or {}).get('pnl_pct', 0):+.2f}%)"""
+⭐ *הטוב והרע מהלילה:*
+🏆 {best.get('hunter_setup', {}).get('סוג', '?')} {best.get('decision', {}).get('החלטה', '?')}: {(best.get('simulation') or {}).get('pnl_pct', 0):+.2f}%
+💔 {worst.get('hunter_setup', {}).get('סוג', '?')} {worst.get('decision', {}).get('החלטה', '?')}: {(worst.get('simulation') or {}).get('pnl_pct', 0):+.2f}%"""
 
                 if today_lessons:
-                    msg += "\n\n💡 *לקח עיקרי שנלמד:*\n" + (today_lessons[-1].get("rule", "")[:200])
+                    msg += f"\n\n💡 *לקח עיקרי מהלילה:*\n{today_lessons[-1].get('rule', '')[:250]}"
+
+                # ניתוח שעות פעילות מההיסטוריה
+                from collections import defaultdict
+                all_closed_live = [t for t in trades
+                                   if t.get("status") == "closed" and t.get("live_mode")]
+                hour_stats = defaultdict(lambda: {"count": 0, "wins": 0, "pnl": 0.0})
+                for t in all_closed_live:
+                    ts = t.get("timestamp_analyzed") or t.get("created_at", "")
+                    try:
+                        hour = int(ts[11:13]) if len(ts) >= 13 else None
+                    except (ValueError, IndexError):
+                        hour = None
+                    if hour is None:
+                        continue
+                    pnl = (t.get("simulation") or {}).get("pnl_pct", 0)
+                    hour_stats[hour]["count"] += 1
+                    hour_stats[hour]["pnl"] += pnl
+                    if pnl > 0:
+                        hour_stats[hour]["wins"] += 1
+
+                if hour_stats:
+                    # 3 השעות עם הכי הרבה עסקאות
+                    top_hours = sorted(hour_stats.items(),
+                                       key=lambda x: -x[1]["count"])[:3]
+                    msg += "\n\n⏰ *שעות הפעילות הכי גבוהה (מצטבר):*"
+                    for hr, s in top_hours:
+                        wr = s["wins"] / s["count"] * 100
+                        emoji = "🟢" if wr >= 60 else "🟡" if wr >= 45 else "🔴"
+                        msg += f"\n• {hr:02d}:00-{(hr+1)%24:02d}:00 - {s['count']} עסקאות, WR {wr:.0f}% {emoji}"
+
+                    # השעה הכי רווחית (PF נטו)
+                    best_hour = max(hour_stats.items(), key=lambda x: x[1]["pnl"])
+                    if best_hour[1]["count"] >= 3 and best_hour[1]["pnl"] > 0:
+                        msg += f"\n\n💎 שעה הכי רווחית: {best_hour[0]:02d}:00 ({best_hour[1]['pnl']:+.2f}% מצטבר, {best_hour[1]['count']} עסקאות)"
+
+                if open_recs:
+                    msg += "\n\n🔴 *פתוחות עכשיו:*"
+                    for r in open_recs[:3]:
+                        msg += f"\n• {r['direction']} {r['setup_type']} - כניסה ${r['entry']:,.2f}"
+
+                # התקדמות ליעד
+                progress = ((acc["current_balance"] - acc["starting_balance"]) /
+                            max(acc["target_balance"] - acc["starting_balance"], 1) * 100)
+                progress = max(0, min(100, progress))
+                bar_filled = int(progress / 5)
+                bar = "█" * bar_filled + "░" * (20 - bar_filled)
+                msg += f"\n\n🎯 *התקדמות ליעד ${acc['target_balance']:,.0f}:*\n`{bar}` {progress:.1f}%"
+
+                # ניצול חבילת Claude Max ($200)
+                from memory_store import get_cost_summary
+                costs = get_cost_summary()
+                MONTHLY_BUDGET = 200.0
+                pct_today = costs["today"] / (MONTHLY_BUDGET / 30) * 100  # יחס ליום ממוצע
+                pct_month = costs["this_month"] / MONTHLY_BUDGET * 100
+                budget_emoji = "🟢" if pct_month < 50 else "🟡" if pct_month < 80 else "🔴"
+
+                msg += f"""
+
+💸 *ניצול חבילת Claude ($200/חודש):*
+• היום: ${costs['today']:.2f} ({pct_today:.0f}% מתקציב יומי ממוצע)
+• אתמול: ${costs['yesterday']:.2f}
+• חודש זה: ${costs['this_month']:.2f} ({pct_month:.1f}% מ-$200) {budget_emoji}
+• יתרה צפויה: ${MONTHLY_BUDGET - costs['this_month']:.2f}"""
+
+                msg += "\n\n☕ יום טוב!"
 
                 send_message(authorized, msg, parse_mode="")
         except Exception as e:
             print(f"⚠️ daily_summary: {e}")
+
+
+SYSTEM_STATE_FILE = ROOT / "memory" / "system_state.json"
+
+
+def update_system_state(**kwargs):
+    """מעדכן את קובץ הסטטוס של המערכת - מה ה-threads עושים עכשיו."""
+    state = {}
+    if SYSTEM_STATE_FILE.exists():
+        try:
+            import json as _json
+            state = _json.loads(SYSTEM_STATE_FILE.read_text())
+        except Exception:
+            state = {}
+    state.update(kwargs)
+    state["updated_at"] = datetime.now().isoformat()
+    try:
+        import json as _json
+        SYSTEM_STATE_FILE.write_text(_json.dumps(state, ensure_ascii=False, indent=2))
+    except Exception:
+        pass
+
+
+def load_system_state() -> dict:
+    if not SYSTEM_STATE_FILE.exists():
+        return {}
+    try:
+        import json as _json
+        return _json.loads(SYSTEM_STATE_FILE.read_text())
+    except Exception:
+        return {}
 
 
 def _live_auto_scanner_loop():
@@ -790,7 +945,14 @@ def _live_auto_scanner_loop():
 
             # סורקים
             print(f"[auto-scan] {datetime.now().strftime('%H:%M:%S')} - בודק שוק חי...")
+            update_system_state(scanner_status="running", scanner_started=datetime.now().isoformat())
             result = check_live_market(verbose=False)
+            update_system_state(
+                scanner_status="idle",
+                last_scan_at=datetime.now().isoformat(),
+                last_scan_result=result.get("status"),
+                last_scan_price=result.get("summary", {}).get("price"),
+            )
 
             if result.get("status") == "new_recommendation":
                 r = result["rec"]
@@ -824,7 +986,14 @@ def _live_monitor_loop():
             acc = load_account()
             if acc.get("stage", 1) < 2:
                 continue
+            update_system_state(monitor_status="checking", monitor_started=datetime.now().isoformat())
             events = poll_open_recommendations(verbose=False)
+            update_system_state(
+                monitor_status="idle",
+                last_monitor_at=datetime.now().isoformat(),
+                last_monitor_closed=len(events),
+                open_recs_count=len(load_open_recs()),
+            )
             for e in events:
                 rec = e["rec"]
                 exit_info = e["exit"]
@@ -842,25 +1011,111 @@ P/L נטו: {exit_info['pnl_pct']:+.2f}%
             print(f"⚠️ live_monitor_loop: {e}")
 
 
+def cmd_pulse(chat_id: int):
+    """מציג מה כל ה-threads עושים עכשיו - חלון לזמן אמת."""
+    from datetime import datetime as _dt
+    state = load_system_state()
+    open_recs = load_open_recs()
+    acc = load_account()
+
+    def fmt_ago(iso_str):
+        if not iso_str:
+            return "אף פעם"
+        try:
+            t = _dt.fromisoformat(iso_str)
+            mins = (datetime.now() - t).total_seconds() / 60
+            if mins < 1:
+                return f"לפני {int(mins*60)} שניות"
+            if mins < 60:
+                return f"לפני {int(mins)} דק'"
+            return f"לפני {int(mins/60)} שעות"
+        except Exception:
+            return iso_str[:16]
+
+    scanner_st = state.get("scanner_status", "ממתין להפעלה ראשונה")
+    monitor_st = state.get("monitor_status", "ממתין להפעלה ראשונה (5 דק' מהעלאה)")
+    last_scan = fmt_ago(state.get("last_scan_at")) if state.get("last_scan_at") else "עוד לא רץ"
+    last_mon = fmt_ago(state.get("last_monitor_at")) if state.get("last_monitor_at") else "עוד לא רץ"
+    last_result = state.get("last_scan_result")
+    last_price = state.get("last_scan_price")
+
+    # תרגום מצב לעברית
+    scanner_he = {
+        "running": "🟢 סורק עכשיו (בודק שוק)",
+        "idle": "🟡 ממתין לסריקה הבאה",
+    }.get(scanner_st, scanner_st)
+    monitor_he = {
+        "checking": "🟢 בודק עכשיו",
+        "idle": "🟡 ממתין לבדיקה הבאה",
+    }.get(monitor_st, monitor_st)
+
+    # תיאור תוצאת הסריקה האחרונה
+    result_meaning = {
+        "filtered_quiet": "🟡 השוק שקט - דילגנו בלי לקרוא לצייד",
+        "no_setup": "🟡 הצייד בדק - לא מצא setup ראוי",
+        "rejected": "🟡 הצייד מצא אבל הוועדה דחתה",
+        "new_recommendation": "🟢 נמצאה הזדמנות חדשה!",
+        "hunter_error": "🔴 הצייד נכשל",
+    }.get(last_result, last_result or "אין נתונים")
+
+    msg = f"""💓 *פעימת לב המערכת*
+
+🤖 *Auto-Scanner*
+מצב: {scanner_he}
+סריקה אחרונה: {last_scan}
+תוצאה: {result_meaning}
+{f'מחיר אז: ${last_price:,.2f}' if last_price else ''}
+
+🔴 *Live Monitor*
+מצב: {monitor_he}
+בדיקה אחרונה: {last_mon}
+
+📊 *מצב נוכחי*
+מקום בשלב: {acc.get('stage', 1)} ({acc.get('mode', '?')})
+יתרה: ${acc.get('current_balance', 0):,.2f}
+המלצות פתוחות: {len(open_recs)}"""
+
+    if open_recs:
+        msg += "\n\n*🎯 פתוחות עכשיו:*"
+        for r in open_recs:
+            opened = r['opened_at'][:16].replace('T', ' ')
+            msg += f"\n• {r['direction']} {r['setup_type']} (`{r['id']}`)\n  {opened}, כניסה ${r['entry']:,.2f}"
+
+    send_message(chat_id, msg, parse_mode="")
+
+
 def cmd_help(chat_id: int):
-    msg = """🤖 *Guy Trade*
+    msg = """🤖 *Guy Trade - תפריט פקודות*
 
-פקודות:
-/run     🚀 הפעל סשן חדש (1 עסקה)
-/status  📊 מה קורה כרגע
-/last    📋 פרטי העסקה האחרונה
-/stats   📈 סטטיסטיקה כללית
-/account 💰 מצב חשבון + יעד
-/lessons 📚 לקחים אחרונים
-/analyze 🔍 המכוון - דוח שיפורים למערכת
-/advance 🎯 עבור לשלב הבא (אחרי הגעה ליעד)
+🔴 *מצב לייב (שלב 2 - אקטיבי!):*
+/pulse — מה הבוט עושה ברגע זה (חינמי)
+/live\\_status — המלצות פתוחות
+/live\\_check — סריקה חיה ידנית עכשיו
 
-🔴 *לייב (שלב 2):*
-/live_check 🔴 סרוק שוק חי עכשיו
-/live_status 📡 המלצות פתוחות + מצב לייב
+💰 *חשבון וביצועים:*
+/account — יתרה, יעד, התקדמות
+/stats — Win Rate, P/L, Profit Factor
+/last — פרטי העסקה האחרונה
+/lessons — 5 לקחים אחרונים
 
-/stop    🛑 עצור סשן רץ
-/help    ❓ הצג את ההודעה הזו"""
+🧠 *למידה ושיפור:*
+/analyze — המכוון מנתח ומציע שיפורים
+/advance — עבור לשלב הבא (כשהקריטריונים מתקיימים)
+
+🎯 *פייפר היסטורי (שלב 1):*
+/run — סשן למידה היסטורי (לא פעיל עכשיו - אתה בשלב 2)
+
+⚙️ *מערכת:*
+/stop — עצור פעולה רצה
+/help — תפריט זה
+
+💬 *אפשר גם לכתוב שאלות חופשיות* כמו "כמה הרווחנו?" - הבוט עונה באנלוגיות פשוטות.
+
+🤖 *רץ אוטומטית ברקע:*
+• Auto-Scanner סורק כל 15 דק'
+• Live Monitor בודק פתוחות כל 5 דק'
+• תקציר יומי ב-23:00
+• גיבוי GitHub ב-23:30"""
     send_message(chat_id, msg)
 
 
@@ -876,7 +1131,11 @@ COMMANDS = {
     "/lessons": cmd_lessons,
     "/analyze": cmd_analyze,
     "/live_check": cmd_live_check,
+    "/livecheck": cmd_live_check,        # alias בלי קו תחתון
+    "/live": cmd_live_check,             # alias קצר
     "/live_status": cmd_live_status,
+    "/livestatus": cmd_live_status,      # alias בלי קו תחתון
+    "/pulse": cmd_pulse,                  # מה קורה עכשיו ברקע
     "/stop": stop_session,
     "/help": cmd_help,
 }
@@ -913,6 +1172,20 @@ def handle_message(message: dict):
         except Exception as e:
             send_message(chat_id, f"❌ שגיאה בפקודה {cmd}: {e}")
     else:
+        # אם זה נראה כמו פקודה (מתחיל ב-/) - נסה למצוא טעות הקלדה
+        if text.startswith("/"):
+            import difflib
+            close = difflib.get_close_matches(cmd, list(COMMANDS.keys()), n=1, cutoff=0.6)
+            if close:
+                send_message(
+                    chat_id,
+                    f"❓ לא הכרתי את `{cmd}`.\nאולי התכוונת ל-{close[0]}? תשלח שוב.",
+                    parse_mode="",
+                )
+                return
+            send_message(chat_id, f"❓ לא הכרתי את `{cmd}`. שלח /help לרשימה מלאה.", parse_mode="")
+            return
+
         # טקסט חופשי - שולחים ל-LLM שעונה לפי הנתונים
         try:
             cmd_freetext(chat_id, text)

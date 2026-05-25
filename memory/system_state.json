@@ -1,0 +1,13 @@
+{
+  "scanner_status": "idle",
+  "scanner_started": "2026-05-25T05:12:14.749187",
+  "updated_at": "2026-05-25T05:28:27.807386",
+  "last_scan_at": "2026-05-25T05:19:23.702475",
+  "last_scan_result": "rejected",
+  "last_scan_price": 77408.08,
+  "monitor_status": "idle",
+  "monitor_started": "2026-05-25T05:28:27.805959",
+  "last_monitor_at": "2026-05-25T05:28:27.807305",
+  "last_monitor_closed": 0,
+  "open_recs_count": 0
+}

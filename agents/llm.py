@@ -92,11 +92,20 @@ def call_claude(
 
     raw_result = envelope.get("result", "")
     parsed = _extract_json(raw_result)
+    cost = float(envelope.get("total_cost_usd", 0))
+
+    # תיעוד עלות לסטטיסטיקה יומית
+    if cost > 0:
+        try:
+            from memory_store import log_llm_cost
+            log_llm_cost(cost)
+        except Exception:
+            pass
 
     return LLMResponse(
         raw_result=raw_result,
         parsed=parsed,
-        cost_usd=float(envelope.get("total_cost_usd", 0)),
+        cost_usd=cost,
         duration_ms=int(envelope.get("duration_ms", 0)),
         is_error=False,
     )
