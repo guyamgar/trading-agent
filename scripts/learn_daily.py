@@ -37,7 +37,7 @@ SESSION_MAX_SCANS = 25           # תקרה לסשן - גם בלי 3 כניסו�
 LOOKBACK_CANDLES = 700           # ~7 ימי 15m
 CONTEXT_BEFORE = 250             # נרות לתקציר השוק (כמו ה-live)
 SIM_FORWARD_CANDLES = 96         # מקסימום 24 שעות החזקה
-MIN_HUNTER_QUALITY = 5           # ציון מינימלי לטיפול בסטאפ
+MIN_HUNTER_QUALITY = 4           # הורד מ-5 - הוועדה היא פילטר אמיתי
 
 
 def pick_simulation_anchors(total_candles: int, n: int) -> list:
@@ -282,7 +282,7 @@ def _save_skipped(trade_num, anchor_idx, summary, hunter, committee=None,
 
 
 SCAN_STEP_CANDLES = 8              # מתקדמים 8 נרות (שעתיים) בין סריקות
-MAX_SCANS_BETWEEN_TRADES = 60      # תקרת בטיחות - לא יותר מ-60 סריקות כדי להגיע לעסקה אחת
+MAX_SCANS_BETWEEN_TRADES = 12      # הורד מ-60 - סשן מהיר לאימון מאסיבי
 
 
 def is_market_worth_scanning(summary: dict) -> tuple:

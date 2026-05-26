@@ -62,5 +62,70 @@
     "reason": "מינימום 3 דוגמאות נדרש לאישור. בנתונים המסופקים: דוגמה אחת בלבד (trade b0192209 עם -6.5%). בנוסף, נתונים סטטיסטיים = {} (ריק לחלוטין). לא קיימת בסיס דאטה מספיק לקבלת החלטה.",
     "rec_title": "הוסף לקח חדש - Bounce SHORT זה וטו בBTCUSDT 15m",
     "applied_at": "2026-05-24T14:43:44.075846"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "f3cc8073",
+    "rule": "הוסף שיעור חדש: 'Continuation SHORT וטו כאשר: (MACD_histogram > 0) OR (RSI > 70) — מומנטום uptrend מנוגד לכניסה SHORT'",
+    "applied_at": "2026-05-25T04:28:07.029746"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הנתונים אינם תומכים בהמלצה. דרישות לאישור לא התקבלו: (1) רק 2 דוגמאות מוצעות, מינימום 3 דרוש. (2) הדוגמאות הן טקסטואליות ('יכול להיות בציון נמוך') ולא קוונטיפיקציה חזקה. (3) סטטיסטיקת ה-20 trades האחר",
+    "rec_title": "MIN_HUNTER_QUALITY: 5 → 6",
+    "applied_at": "2026-05-25T04:28:31.572629"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "כישל בעיקרון הבדיקה: (1) נתונים תומכים = {} (ריק לחלוטין) — אין סטטיסטיקה להתמוך בטענה. (2) הדוגמאות המובאות = 4 בלבד (43dc2e17, 15b70fc1, de552233, 3e1fde28) ללא ביסוס סטטיסטי. (3) הטענה על 50% win r",
+    "rec_title": "שיפור Bounce Selector — קריאה לשיעור ce012ca2",
+    "applied_at": "2026-05-25T04:28:54.024720"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "d028296f",
+    "applied_at": "2026-05-25T19:12:15.865020"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "741d744a",
+    "applied_at": "2026-05-25T19:12:15.866587"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "21de0066",
+    "applied_at": "2026-05-25T19:12:15.867931"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "741d744a",
+    "applied_at": "2026-05-25T20:58:19.032264"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "e0e1c4db",
+    "rule": "הוסף לקח חדש: 'Continuation SHORT = וטו מוחלט - אסור להיכנס תחת שום תנאי או override'",
+    "applied_at": "2026-05-25T20:58:19.034343"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "נתונים חסרים לאישור המלצה. ההמלצה טוענת ש-5 לקחים שונים (6c7825b9, 756b9671, e4bb9b66, aad1a151, f3cc8073) זהים 100% בסטטיסטיקה (כל אחד: 16 invokes, 10 correct, 6 wrong = 62.5%), אך הוצגו נתונים רק לל",
+    "rec_title": "הורדת confidence של 5 לקחים זהים עם 62.5% accuracy",
+    "applied_at": "2026-05-25T20:58:58.665237"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "17db6f01",
+    "title": "מחיקת Lesson 17db6f01 - 50% accuracy ללא signal",
+    "applied_at": "2026-05-25T20:59:19.717968"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "6a82b609",
+    "title": "מחיקת Lesson 6a82b609 - 50% accuracy על exit strategy",
+    "applied_at": "2026-05-25T20:59:47.872582"
   }
 ]

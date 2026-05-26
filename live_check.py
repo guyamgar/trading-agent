@@ -18,7 +18,7 @@ from memory_store import relevant_lessons, load_trades
 from config import SYMBOL, TIMEFRAME_ANALYSIS
 
 OPEN_RECS_FILE = ROOT / "memory" / "open_recommendations.json"
-MIN_HUNTER_QUALITY = 5
+MIN_HUNTER_QUALITY = 4  # הורד מ-5 להגדלת תדירות עסקאות; הוועדה היא הפילטר האמיתי
 
 
 def is_market_worth_scanning(summary: dict) -> tuple:
@@ -59,18 +59,20 @@ def save_open_recs(recs: list):
     OPEN_RECS_FILE.write_text(json.dumps({"open": recs}, ensure_ascii=False, indent=2))
 
 
-def check_live_market(verbose: bool = True) -> dict:
+def check_live_market(verbose: bool = True, symbol: str = None) -> dict:
     """
     סורק את מצב השוק החי עכשיו, מפעיל את הצוות, ומחזיר ניתוח.
     אם נמצא setup ראוי - שומר ב-open_recommendations.json.
     """
+    sym = symbol or SYMBOL
     if verbose:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] בודק שוק חי...")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] בודק שוק חי ({sym})...")
 
     # 1. דאטה חי
     client = BinanceClient()
-    df = client.get_klines(SYMBOL, TIMEFRAME_ANALYSIS, limit=250)
+    df = client.get_klines(sym, TIMEFRAME_ANALYSIS, limit=250)
     summary = market_summary(df)
+    summary["symbol"] = sym
 
     if verbose:
         print(f"   מחיר נוכחי: ${summary['price']:,.2f} | "
@@ -151,6 +153,7 @@ def check_live_market(verbose: bool = True) -> dict:
     rec_id = str(uuid.uuid4())[:8]
     rec = {
         "id": rec_id,
+        "symbol": sym,
         "opened_at": datetime.utcnow().isoformat(),
         "opened_at_price": summary["price"],
         "opened_at_candle": summary["timestamp"],

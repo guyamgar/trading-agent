@@ -1,13 +1,15 @@
 {
-  "scanner_status": "idle",
-  "scanner_started": "2026-05-25T05:12:14.749187",
-  "updated_at": "2026-05-25T05:28:27.807386",
-  "last_scan_at": "2026-05-25T05:19:23.702475",
-  "last_scan_result": "rejected",
-  "last_scan_price": 77408.08,
+  "scanner_status": "paused_for_training",
+  "scanner_started": "2026-05-25T22:39:09.423251",
+  "updated_at": "2026-05-26T05:29:39.798539",
+  "last_scan_at": "2026-05-25T22:47:31.590663",
+  "last_scan_result": "new_recommendation",
+  "last_scan_price": 77390.0,
   "monitor_status": "idle",
-  "monitor_started": "2026-05-25T05:28:27.805959",
-  "last_monitor_at": "2026-05-25T05:28:27.807305",
+  "monitor_started": "2026-05-26T05:29:39.797691",
+  "last_monitor_at": "2026-05-26T05:29:39.798469",
   "last_monitor_closed": 0,
-  "open_recs_count": 0
+  "open_recs_count": 0,
+  "scanner_symbol": "BTCUSDT",
+  "last_scan_symbol": "BTCUSDT"
 }

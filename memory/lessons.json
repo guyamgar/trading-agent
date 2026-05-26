@@ -202,34 +202,6 @@
       "times_correct": 2
     },
     {
-      "trade_num": 3,
-      "rule": "פריצת squeeze שמבצעת pullback של 50%+ מהמהלך הראשוני — הסטאפ מבוטל. (כאן: פריצה 353 נק׳ ← pullback 177 נק׳ = 50% retracement → כניסה נכשלה). גם אם EMA stack bullish ו-RSI 'בריא', retracement עמוק כזה מאפס את מומנטום הפריצה.",
-      "trigger": "כל סטאפ pullback לאחר פריצת squeeze: לחשב (גובה_pullback ÷ גובה_פריצה). אם התוצאה ≥ 0.50 → וטו על כניסה",
-      "category": "טכני",
-      "from_outcome": "stop",
-      "id": "17db6f01",
-      "created_at": "2026-05-24T00:41:02.676634",
-      "confidence": 2,
-      "times_invoked": 4,
-      "times_wrong": 2,
-      "updated_at": "2026-05-24T06:03:34.165672",
-      "times_correct": 2
-    },
-    {
-      "trade_num": 1,
-      "rule": "כשסטאפ Bounce מגיע ל-T1 בנר אחד בלבד (15 דקות) עם EMA stack bullish מלא — אל תצא מלא ב-T1; העבר סטופ ל-BE ותן ל-50% מהפוזיציה לרוץ ל-T2",
-      "trigger": "Bounce setup + candles_held ≤ 2 עד T1 + EMA 9>21>50>200 מלא",
-      "category": "טכני",
-      "from_outcome": "target_1",
-      "id": "6a82b609",
-      "created_at": "2026-05-24T04:35:04.228703",
-      "confidence": 2,
-      "times_invoked": 4,
-      "times_wrong": 2,
-      "updated_at": "2026-05-24T06:03:34.165988",
-      "times_correct": 2
-    },
-    {
       "trade_num": 1,
       "rule": "פולבק מעל 50% מהמהלך הראשוני = ווטו מוחלט בלי יוצא מן הכלל — לא 'כניסה מצומצמת ללימוד', לא 'ציון 7 מצדיק חריגה'. עסקה זו נכנסה ב-83% retracement ונפסלה תוך נר אחד בדיוק בסטופ.",
       "trigger": "כאשר הפולבק לאזור הכניסה חוצה 50% מהמהלך הדירקציונלי הקודם (כיוון ההגדרה)",
@@ -531,7 +503,7 @@
       "times_wrong": 7,
       "overrides_attempted": 0,
       "overrides_successful": 0,
-      "updated_at": "2026-05-24T14:43:34.834424"
+      "updated_at": "2026-05-25T20:58:19.030579"
     },
     {
       "trade_num": 1,
@@ -541,13 +513,13 @@
       "from_outcome": "stop",
       "id": "21de0066",
       "created_at": "2026-05-24T12:30:33.251257",
-      "confidence": 4,
+      "confidence": 2,
       "times_invoked": 24,
       "times_correct": 17,
       "times_wrong": 7,
       "overrides_attempted": 0,
       "overrides_successful": 0,
-      "updated_at": "2026-05-24T14:43:34.835564"
+      "updated_at": "2026-05-25T19:12:15.867398"
     },
     {
       "trade_num": 1,
@@ -557,13 +529,13 @@
       "from_outcome": "stop",
       "id": "d028296f",
       "created_at": "2026-05-24T13:00:20.784551",
-      "confidence": 4,
+      "confidence": 2,
       "times_invoked": 29,
       "times_correct": 19,
       "times_wrong": 10,
       "overrides_attempted": 0,
       "overrides_successful": 0,
-      "updated_at": "2026-05-24T15:26:56.585484"
+      "updated_at": "2026-05-25T19:12:15.863243"
     },
     {
       "rule": "הוסף לקח חדש: 'Breakout LONG = וטו מוחלט. אסור להיכנס בשום מקרה, בלי קשר לאינדיקטורים אחרים. היסטוריה: 0 מתוך 2 הצלחות, הפסדים עד -48%.'",
@@ -651,12 +623,13 @@
       "from_outcome": "target_1",
       "id": "6c7825b9",
       "created_at": "2026-05-24T16:13:15.068427",
-      "confidence": 1,
-      "times_invoked": 0,
-      "times_correct": 0,
-      "times_wrong": 0,
+      "confidence": 5,
+      "times_invoked": 16,
+      "times_correct": 10,
+      "times_wrong": 6,
       "overrides_attempted": 0,
-      "overrides_successful": 0
+      "overrides_successful": 0,
+      "updated_at": "2026-05-25T20:55:26.031665"
     },
     {
       "rule": "אם מרחק הסטופ (%) קטן מהעמלה הכוללת (0.2%), אסור להיכנס — בעסקה זו סטופ של 50 נק' = 0.065% בלבד, כלומר העמלה לבדה (0.2%) הייתה גדולה פי 3 מהסטופ; ההפסד היה מובטח מתמטית לפני שהשוק זז",
@@ -666,12 +639,13 @@
       "live_mode": true,
       "id": "756b9671",
       "created_at": "2026-05-24T16:52:40.665707",
-      "confidence": 1,
-      "times_invoked": 0,
-      "times_correct": 0,
-      "times_wrong": 0,
+      "confidence": 6,
+      "times_invoked": 26,
+      "times_correct": 17,
+      "times_wrong": 9,
       "overrides_attempted": 0,
-      "overrides_successful": 0
+      "overrides_successful": 0,
+      "updated_at": "2026-05-25T22:31:48.679981"
     },
     {
       "rule": "שני אורות אדומים מכל שני רכיבים (כולל 'להמתין' מקורא ההקשר) = אין כניסה, גם אם RR נראה טוב ואין וטו מוחלט רשמי",
@@ -681,12 +655,13 @@
       "live_mode": true,
       "id": "e4bb9b66",
       "created_at": "2026-05-24T21:42:27.204409",
-      "confidence": 1,
-      "times_invoked": 0,
-      "times_correct": 0,
-      "times_wrong": 0,
+      "confidence": 16,
+      "times_invoked": 51,
+      "times_correct": 37,
+      "times_wrong": 14,
       "overrides_attempted": 0,
-      "overrides_successful": 0
+      "overrides_successful": 0,
+      "updated_at": "2026-05-26T02:23:36.999000"
     },
     {
       "rule": "אל תיכנס לעסקה כשהדפוס הבסיסי (pattern) נוצר לפני פחות מ-60 דקות ו-times_invoked=0 — זהו over-fitting מובטח",
@@ -696,12 +671,59 @@
       "live_mode": true,
       "id": "aad1a151",
       "created_at": "2026-05-24T22:03:26.709705",
-      "confidence": 1,
-      "times_invoked": 0,
-      "times_correct": 0,
-      "times_wrong": 0,
+      "confidence": 16,
+      "times_invoked": 51,
+      "times_correct": 37,
+      "times_wrong": 14,
       "overrides_attempted": 0,
-      "overrides_successful": 0
+      "overrides_successful": 0,
+      "updated_at": "2026-05-26T02:23:37.000103"
+    },
+    {
+      "rule": "הוסף שיעור חדש: 'Continuation SHORT וטו כאשר: (MACD_histogram > 0) OR (RSI > 70) — מומנטום uptrend מנוגד לכניסה SHORT'",
+      "trigger": "100% מהContinuation trades בדאטה סבלו: 2849b15a (-0.265, stop) ו-a45a0ebe (-0.463, stop), שניהם SHORT. זה 0% win rate על סוג אחד. יש לאסור Continuation SHORT כאשר MACD_histogram חיובי או RSI > 70 (מומ",
+      "category": "auto_from_tuner",
+      "from_outcome": "tuner_recommendation",
+      "confidence": 16,
+      "id": "f3cc8073",
+      "created_at": "2026-05-25T04:28:07.027454",
+      "times_invoked": 51,
+      "times_correct": 37,
+      "times_wrong": 14,
+      "overrides_attempted": 0,
+      "overrides_successful": 0,
+      "updated_at": "2026-05-26T02:23:37.001009"
+    },
+    {
+      "rule": "הוסף לקח חדש: 'Continuation SHORT = וטו מוחלט - אסור להיכנס תחת שום תנאי או override'",
+      "trigger": "Continuation SHORT: 0/2 wins בnative closed trades (100% loss rate: -0.265, -0.463); לעומת Pullback SHORT שיש 2/2 wins (+0.2, +0.45); דפוס חד - סוג זה אינו עובד על הסימול/טיימפריים הנוכחיים; נתונים נו",
+      "category": "auto_from_tuner",
+      "from_outcome": "tuner_recommendation",
+      "confidence": 13,
+      "id": "e0e1c4db",
+      "created_at": "2026-05-25T20:58:19.033064",
+      "times_invoked": 35,
+      "times_correct": 27,
+      "times_wrong": 8,
+      "overrides_attempted": 0,
+      "overrides_successful": 0,
+      "updated_at": "2026-05-26T02:23:37.001929"
+    },
+    {
+      "rule": "אל תבטל לקח חסימה בגלל win_rate נמוך אם מספר ההפעלות קטן מ-20 — מדגם של n<20 אינו מובהק סטטיסטית ואסור לקבל עליו OVERRIDE",
+      "trigger": "כאשר מוצע OVERRIDE על לקח חסימה בטענה שה-win_rate שלו נמוך",
+      "category": "סיכון",
+      "from_outcome": "stop",
+      "live_mode": true,
+      "id": "4a73a7e2",
+      "created_at": "2026-05-25T22:34:38.829346",
+      "confidence": 11,
+      "times_invoked": 25,
+      "times_correct": 20,
+      "times_wrong": 5,
+      "overrides_attempted": 0,
+      "overrides_successful": 0,
+      "updated_at": "2026-05-26T02:23:37.002658"
     }
   ]
 }

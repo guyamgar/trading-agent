@@ -108,6 +108,7 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
         "session": datetime.utcnow().strftime("%Y-%m-%d"),
         "stage": 2,
         "mode": "paper_live",
+        "symbol": rec.get("symbol", SYMBOL),
         "rec_id": rec["id"],
         "timestamp_analyzed": rec.get("opened_at_candle"),
         "hunter_setup": {
@@ -176,22 +177,35 @@ def poll_open_recommendations(verbose: bool = True) -> list:
         return []
 
     client = BinanceClient()
-    # נר אחרון כדי לראות מה ההיי/לואו של 15 הדקות האחרונות
-    df = client.get_klines(SYMBOL, "15m", limit=2)
-    latest = df.iloc[-1]
-    candle_high = float(latest["high"])
-    candle_low = float(latest["low"])
-    current_price = client.get_current_price(SYMBOL)
+
+    # cache לכל סימבול - מושך את הנר/המחיר פעם אחת
+    market_cache = {}
+
+    def _get_market(sym: str):
+        if sym in market_cache:
+            return market_cache[sym]
+        df = client.get_klines(sym, "15m", limit=2)
+        latest = df.iloc[-1]
+        info = {
+            "high": float(latest["high"]),
+            "low": float(latest["low"]),
+            "price": client.get_current_price(sym),
+        }
+        market_cache[sym] = info
+        return info
 
     if verbose:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] בודק {len(open_recs)} המלצות פתוחות")
-        print(f"   מחיר נוכחי: ${current_price:,.2f} | "
-              f"נר אחרון: low ${candle_low:,.2f}, high ${candle_high:,.2f}")
 
     still_open = []
     closed_events = []
 
     for rec in open_recs:
+        sym = rec.get("symbol") or SYMBOL  # back-compat לרשומות ישנות
+        mk = _get_market(sym)
+        candle_high, candle_low, current_price = mk["high"], mk["low"], mk["price"]
+        if verbose:
+            print(f"   [{sym}] מחיר ${current_price:,.2f} | נר low ${candle_low:,.2f}, high ${candle_high:,.2f}")
         status = check_rec_status(rec, current_price, candle_high, candle_low)
         if not status["closed"]:
             if verbose:

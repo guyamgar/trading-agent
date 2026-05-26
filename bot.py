@@ -36,7 +36,7 @@ from auto_apply import apply_recommendations
 from live_check import check_live_market, load_open_recs
 from live_monitor import poll_open_recommendations
 from config import (
-    SYMBOL, TIMEFRAME_ANALYSIS, RISK_PER_TRADE_PCT,
+    SYMBOL, SYMBOLS, TIMEFRAME_ANALYSIS, RISK_PER_TRADE_PCT,
     MIN_RISK_REWARD, DEFAULT_ACCOUNT_SIZE_USD,
 )
 
@@ -631,9 +631,11 @@ def cmd_live_check(chat_id: int):
             result = check_live_market(verbose=False)
             status = result.get("status")
 
+            sym_label = result.get("summary", {}).get("symbol") or SYMBOL
+
             if status == "no_setup":
                 summary = result["summary"]
-                msg = f"""⊘ *אין setup ראוי כרגע*
+                msg = f"""⊘ *אין setup ראוי כרגע* — {sym_label}
 
 📊 מצב שוק חי:
 • מחיר: ${summary['price']:,.2f}
@@ -644,16 +646,28 @@ def cmd_live_check(chat_id: int):
 הערכת הצייד: {result.get('hunter_assessment', '')[:300]}"""
 
             elif status == "rejected":
-                msg = f"""⚠️ *הצייד מצא setup אבל הוועדה דחתה*
+                msg = f"""⚠️ *הצייד מצא setup אבל הוועדה דחתה* — {sym_label}
 
 setup: {result['setup'].get('סוג')} {result['setup'].get('כיוון')}
 סיבת דחייה: {result.get('reason', '')[:300]}"""
+
+            elif status == "filtered_quiet":
+                summary = result["summary"]
+                msg = f"""😴 *השוק שקט* — {sym_label}
+
+לא הגיע לטריגרים שיצדיקו קריאה לצייד (חיסכון בעלויות).
+• מחיר: ${summary['price']:,.2f}
+• RSI: {summary['indicators']['rsi']}
+• סיבה: {result.get('reason', '')}"""
+
+            elif status == "hunter_error":
+                msg = f"⚠️ *הצייד נכשל* — {sym_label}\n{result.get('error', '')[:300]}"
 
             elif status == "new_recommendation":
                 r = result["rec"]
                 msg = f"""🎯 *המלצה חיה חדשה!*
 
-{r['direction']} | {r['setup_type']} (ציון {r['setup_score']})
+{r.get('symbol', SYMBOL)} | {r['direction']} | {r['setup_type']} (ציון {r['setup_score']})
 💵 כניסה: ${r['entry']:,.2f}
 🛑 סטופ: ${r['stop']:,.2f}
 🎯 יעד: ${r['target_1']:,.2f}
@@ -923,33 +937,319 @@ def load_system_state() -> dict:
         return {}
 
 
+# ─── מצב למידה לילית (training mode) ──────────────────────────────
+# כשהדגל פעיל: ה-auto-scanner החי נעצר, ובמקומו רץ לולאת learn_daily
+# שעושה למידה היסטורית - עסקה אחרי עסקה, עם התראות בטלגרם.
+
+TRAINING_MODE_FILE = ROOT / "memory" / "training_mode.json"
+LEARN_SCRIPT = ROOT / "scripts" / "learn_daily.py"
+
+
+def get_training_state() -> dict:
+    if not TRAINING_MODE_FILE.exists():
+        return {"enabled": False}
+    try:
+        import json as _json
+        return _json.loads(TRAINING_MODE_FILE.read_text())
+    except Exception:
+        return {"enabled": False}
+
+
+def set_training_state(**kwargs):
+    state = get_training_state()
+    state.update(kwargs)
+    state["updated_at"] = datetime.now().isoformat()
+    try:
+        import json as _json
+        TRAINING_MODE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        TRAINING_MODE_FILE.write_text(_json.dumps(state, ensure_ascii=False, indent=2))
+    except Exception:
+        pass
+
+
+def is_training_mode() -> bool:
+    return bool(get_training_state().get("enabled"))
+
+
+def _is_backup_window() -> bool:
+    """05:25-05:35 - חלון הגיבוי היומי לGit. עוצרים סשני אימון כדי שלא יכתבו במקביל."""
+    now = datetime.now()
+    if now.hour == 5 and 25 <= now.minute <= 35:
+        return True
+    return False
+
+
+def _training_loop():
+    """רץ ברקע - כשמצב למידה פעיל, מריץ סשני learn_daily ברצף עד שיכבו."""
+    import subprocess
+    import signal
+    import os
+    time.sleep(75)  # אחרי שה-scanner מתעורר, כדי לא להתחיל ביחד
+    while True:
+        try:
+            if not is_training_mode():
+                time.sleep(15)
+                continue
+
+            authorized = get_authorized_chat_id()
+            if not authorized:
+                time.sleep(60)
+                continue
+
+            # מתחמקים מחלון הגיבוי - לא רוצים JSON corrupt
+            if _is_backup_window():
+                print("[train] בחלון גיבוי (05:25-05:35) - מחכה דקה")
+                time.sleep(60)
+                continue
+
+            from memory_store import load_trades, load_lessons
+
+            state = get_training_state()
+            session_num = state.get("sessions_done", 0) + state.get("sessions_failed", 0) + 1
+            session_start = datetime.now()
+            print(f"[train] סשן {session_num} מתחיל ב-{session_start.strftime('%H:%M:%S')}")
+            set_training_state(current_session_started=session_start.isoformat(), current_session_num=session_num)
+
+            initial_closed = len([t for t in load_trades() if t.get("status") == "closed"])
+
+            # זרם stdout/stderr לקובץ ולא לזיכרון - חוסך RAM ומאפשר לראות לוג
+            session_log_path = ROOT / "logs" / "training_sessions.log"
+            session_log_path.parent.mkdir(parents=True, exist_ok=True)
+            result = None
+            proc = None
+            try:
+                with session_log_path.open("a") as log_f:
+                    log_f.write(f"\n\n===== סשן {session_num} @ {session_start.isoformat()} =====\n")
+                    log_f.flush()
+                    # start_new_session=True → הקבוצת תהליכים שלנו. ב-timeout הורגים את כל הקבוצה
+                    # ולא רק את התהליך הישיר → לא יוצרים זומבי-Claude יתום
+                    proc = subprocess.Popen(
+                        [sys.executable, "-u", str(LEARN_SCRIPT)],
+                        cwd=str(ROOT),
+                        stdout=log_f, stderr=subprocess.STDOUT,
+                        start_new_session=True,
+                    )
+                    try:
+                        returncode = proc.wait(timeout=1500)
+                    except subprocess.TimeoutExpired:
+                        # הורג את כל קבוצת התהליכים - כולל ילדי Claude CLI
+                        try:
+                            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                            time.sleep(3)
+                            if proc.poll() is None:
+                                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                        try:
+                            proc.wait(timeout=10)
+                        except subprocess.TimeoutExpired:
+                            pass
+                        returncode = -1
+                    log_f.write(f"===== exit={returncode} =====\n")
+                elapsed_min = (datetime.now() - session_start).total_seconds() / 60
+                success = (returncode == 0)
+            except Exception as e:
+                print(f"[train] שגיאה בהפעלת תהליך: {e}")
+                elapsed_min = (datetime.now() - session_start).total_seconds() / 60
+                success = False
+
+            # קריאה חוזרת של training_state - אולי המשתמש כיבה/הפעיל מחדש בזמן הריצה
+            current_state = get_training_state()
+            still_on = bool(current_state.get("enabled"))
+
+            if success:
+                trades = load_trades()
+                closed = [t for t in trades if t.get("status") == "closed"]
+                new_trade = None
+                if len(closed) > initial_closed:
+                    new_trade = closed[-1]
+
+                sessions_done = current_state.get("sessions_done", 0) + 1
+                wins = current_state.get("wins", 0)
+                losses = current_state.get("losses", 0)
+
+                if new_trade:
+                    sim = new_trade.get("simulation") or {}
+                    pnl = sim.get("pnl_pct", 0)
+                    setup = new_trade.get("hunter_setup") or {}
+                    decision = new_trade.get("decision") or {}
+                    coach = (new_trade.get("post_trade") or {}).get("coach") or {}
+                    lesson = coach.get("לקח_חדש")
+                    sym = new_trade.get("symbol", "BTCUSDT")
+
+                    if pnl > 0:
+                        wins += 1
+                        emoji, verdict = "🟢", "ניצחון"
+                    else:
+                        losses += 1
+                        emoji, verdict = "🔴", "הפסד"
+
+                    acc = load_account()
+                    msg = (
+                        f"{emoji} *למידה - סשן {session_num} - {verdict}*\n\n"
+                        f"📊 {sym} {setup.get('סוג', '?')} {decision.get('החלטה', '?')}\n"
+                        f"💵 P/L: {pnl:+.2f}% (${sim.get('pnl_usd_per_unit', 0):+.2f})\n"
+                        f"⏱ {elapsed_min:.1f} דק' (החזקה {sim.get('minutes_held', 0)} דק')\n"
+                        f"💰 יתרה: ${acc['current_balance']:,.2f}\n"
+                        f"📈 סה\"כ: {sessions_done} סשנים, {wins}W/{losses}L"
+                    )
+                    if lesson and lesson not in (None, "אין לקח חדש", "null"):
+                        msg += f"\n\n💡 לקח: {lesson[:200]}"
+                    send_message(authorized, msg, parse_mode="")
+
+                set_training_state(
+                    sessions_done=sessions_done,
+                    wins=wins,
+                    losses=losses,
+                    current_session_started=None,
+                    current_session_num=None,
+                )
+                print(f"[train] סשן {session_num} ✓ ({elapsed_min:.1f} דק')")
+            else:
+                sessions_failed = current_state.get("sessions_failed", 0) + 1
+                set_training_state(
+                    sessions_failed=sessions_failed,
+                    current_session_started=None,
+                    current_session_num=None,
+                )
+                # קוראים את סוף קובץ הלוג כדי להבין למה נכשל
+                err_tail = ""
+                try:
+                    session_log_path = ROOT / "logs" / "training_sessions.log"
+                    if session_log_path.exists():
+                        with session_log_path.open("rb") as f:
+                            f.seek(0, 2)
+                            size = f.tell()
+                            f.seek(max(0, size - 600))
+                            err_tail = f.read().decode("utf-8", errors="ignore")[-300:]
+                except Exception:
+                    pass
+                if not err_tail:
+                    err_tail = "timeout או שגיאה לא ידועה"
+                print(f"[train] סשן {session_num} ✗ ({elapsed_min:.1f} דק') {err_tail[:100]}")
+                # התראה רק אחת ל-3 כשלונות רצופים כדי לא להציף
+                if sessions_failed % 3 == 0:
+                    send_message(
+                        authorized,
+                        f"⚠️ למידה: {sessions_failed} כשלונות רצופים. אחרון: {err_tail[:150]}",
+                        parse_mode="",
+                    )
+
+            # אם המשתמש כיבה בזמן הריצה - שלח אישור
+            if not still_on:
+                summary = get_training_state()
+                send_message(
+                    authorized,
+                    f"⏸ *למידה נעצרה*\n\n"
+                    f"✅ סשנים שהושלמו: {summary.get('sessions_done', 0)}\n"
+                    f"🏆 ניצחונות: {summary.get('wins', 0)}\n"
+                    f"💔 הפסדים: {summary.get('losses', 0)}\n"
+                    f"❌ כשלונות: {summary.get('sessions_failed', 0)}\n\n"
+                    f"חזרה ל-Auto-Scanner חי (BTC + ETH).",
+                    parse_mode="",
+                )
+
+            # מנוחה קצרצרה לפני סשן הבא
+            time.sleep(5)
+        except Exception as e:
+            print(f"⚠️ training_loop: {e}")
+            time.sleep(30)
+
+
+def cmd_learn_start(chat_id: int):
+    """מפעיל מצב למידה - אימון רצוף על דאטה היסטורי, ה-auto-scanner של הלייב נפסק."""
+    if is_training_mode():
+        st = get_training_state()
+        send_message(
+            chat_id,
+            f"⚠️ למידה כבר פעילה!\n"
+            f"סשנים שהושלמו: {st.get('sessions_done', 0)}\n"
+            f"ניצחונות: {st.get('wins', 0)} | הפסדים: {st.get('losses', 0)}\n\n"
+            f"שלח /learn_stop כדי לעצור.",
+            parse_mode="",
+        )
+        return
+
+    set_training_state(
+        enabled=True,
+        started_at=datetime.now().isoformat(),
+        sessions_done=0,
+        sessions_failed=0,
+        wins=0,
+        losses=0,
+    )
+    send_message(
+        chat_id,
+        f"🌙 *למידת לילה התחילה*\n\n"
+        f"רצה ברצף עד שתשלח /learn_stop\n"
+        f"ה-auto-scanner של הלייב מושהה כל הזמן הזה.\n\n"
+        f"תקבל התראה אחרי כל עסקה + עדכוני התקדמות.",
+    )
+
+
+def cmd_learn_stop(chat_id: int):
+    """עוצר את למידת הלילה ומחזיר את ה-auto-scanner לפעולה."""
+    if not is_training_mode():
+        send_message(chat_id, "ℹ️ למידה לא פעילה כרגע. ה-auto-scanner של הלייב פעיל.", parse_mode="")
+        return
+
+    set_training_state(enabled=False, stopped_at=datetime.now().isoformat())
+    st = get_training_state()
+    send_message(
+        chat_id,
+        f"🛑 *מבקש עצירה*\n\n"
+        f"הסשן הנוכחי (אם רץ) יושלם ואז ייעצר.\n"
+        f"זה עלול לקחת עד 25 דק' (אורך סשן מקסימלי).\n\n"
+        f"עד כה: {st.get('sessions_done', 0)} סשנים, "
+        f"{st.get('wins', 0)}W/{st.get('losses', 0)}L\n\n"
+        f"כשתסתיים תקבל סיכום, וה-auto-scanner של הלייב יחזור.",
+    )
+
+
 def _live_auto_scanner_loop():
-    """רץ ברקע - סורק את השוק החי אוטומטית כל 15 דק', פותח המלצות חדשות."""
+    """רץ ברקע - סורק את השוק החי אוטומטית, מתחלף בין סימבולים (BTC/ETH)."""
     MAX_OPEN_RECS = 3  # לא יותר מ-3 המלצות פתוחות בו-זמנית
     # מחכה 60 שניות לפני התחלה ראשונה כדי שהבוט יספיק להעלות
     time.sleep(60)
+    sym_idx = 0
+    # מרווח בין סריקות: 15 דקות חלקי מספר הסימבולים, כך שכל סימבול נסרק כל 15 דק'
+    interval = max(60, 900 // max(len(SYMBOLS), 1))
     while True:
         try:
             authorized = get_authorized_chat_id()
             acc = load_account()
             if not authorized or acc.get("stage", 1) < 2:
-                time.sleep(900)
+                time.sleep(interval)
+                continue
+
+            # אם מצב למידה פעיל - לא סורקים שוק חי
+            if is_training_mode():
+                update_system_state(scanner_status="paused_for_training")
+                time.sleep(interval)
                 continue
 
             # אם יש כבר MAX המלצות פתוחות - מחכים
             open_recs = load_open_recs()
             if len(open_recs) >= MAX_OPEN_RECS:
                 print(f"[auto-scan] {len(open_recs)} המלצות פתוחות (max {MAX_OPEN_RECS}) - מדלג")
-                time.sleep(900)
+                time.sleep(interval)
                 continue
 
+            sym = SYMBOLS[sym_idx % len(SYMBOLS)]
+            sym_idx += 1
+
             # סורקים
-            print(f"[auto-scan] {datetime.now().strftime('%H:%M:%S')} - בודק שוק חי...")
-            update_system_state(scanner_status="running", scanner_started=datetime.now().isoformat())
-            result = check_live_market(verbose=False)
+            print(f"[auto-scan] {datetime.now().strftime('%H:%M:%S')} - בודק שוק חי ({sym})...")
+            update_system_state(
+                scanner_status="running",
+                scanner_started=datetime.now().isoformat(),
+                scanner_symbol=sym,
+            )
+            result = check_live_market(verbose=False, symbol=sym)
             update_system_state(
                 scanner_status="idle",
                 last_scan_at=datetime.now().isoformat(),
+                last_scan_symbol=sym,
                 last_scan_result=result.get("status"),
                 last_scan_price=result.get("summary", {}).get("price"),
             )
@@ -958,7 +1258,7 @@ def _live_auto_scanner_loop():
                 r = result["rec"]
                 msg = f"""🤖 *Auto-Scanner מצא המלצה חדשה!*
 
-{r['direction']} | {r['setup_type']} (ציון {r['setup_score']})
+{r.get('symbol', sym)} | {r['direction']} | {r['setup_type']} (ציון {r['setup_score']})
 💵 כניסה: ${r['entry']:,.2f}
 🛑 סטופ: ${r['stop']:,.2f}
 🎯 יעד: ${r['target_1']:,.2f}
@@ -968,10 +1268,10 @@ ID: `{r['id']}`
 ⚠️ פסיבי - לא לבצע. המערכת תעדכן בסגירה."""
                 send_message(authorized, msg, parse_mode="")
 
-            time.sleep(900)  # 15 דקות בין סריקות
+            time.sleep(interval)
         except Exception as e:
             print(f"⚠️ auto_scanner: {e}")
-            time.sleep(900)
+            time.sleep(interval)
 
 
 def _live_monitor_loop():
@@ -1000,7 +1300,7 @@ def _live_monitor_loop():
                 emoji = "🟢" if exit_info["pnl_pct"] > 0 else "🔴"
                 msg = f"""{emoji} *המלצה נסגרה: {rec['id']}*
 
-{rec['direction']} {rec['setup_type']}
+{rec.get('symbol', SYMBOL)} | {rec['direction']} {rec['setup_type']}
 תוצאה: {exit_info['outcome']} @ ${exit_info['exit_price']:,.2f}
 P/L נטו: {exit_info['pnl_pct']:+.2f}%
 💵 יתרה אחרי: ${e['balance_after']:,.2f}"""
@@ -1038,11 +1338,13 @@ def cmd_pulse(chat_id: int):
     last_mon = fmt_ago(state.get("last_monitor_at")) if state.get("last_monitor_at") else "עוד לא רץ"
     last_result = state.get("last_scan_result")
     last_price = state.get("last_scan_price")
+    train_st = get_training_state()
 
     # תרגום מצב לעברית
     scanner_he = {
         "running": "🟢 סורק עכשיו (בודק שוק)",
         "idle": "🟡 ממתין לסריקה הבאה",
+        "paused_for_training": "⏸ מושהה - מצב למידה דלוק",
     }.get(scanner_st, scanner_st)
     monitor_he = {
         "checking": "🟢 בודק עכשיו",
@@ -1075,6 +1377,20 @@ def cmd_pulse(chat_id: int):
 יתרה: ${acc.get('current_balance', 0):,.2f}
 המלצות פתוחות: {len(open_recs)}"""
 
+    if train_st.get("enabled"):
+        cur_num = train_st.get("current_session_num")
+        cur_started = train_st.get("current_session_started")
+        cur_line = ""
+        if cur_num and cur_started:
+            cur_line = f"\nסשן נוכחי: {cur_num} ({fmt_ago(cur_started)})"
+        msg += (
+            f"\n\n🌙 *מצב למידה דלוק*"
+            f"\nסשנים שהושלמו: {train_st.get('sessions_done', 0)}"
+            f" ({train_st.get('wins', 0)}W/{train_st.get('losses', 0)}L)"
+            f"\nכשלונות: {train_st.get('sessions_failed', 0)}{cur_line}"
+            f"\nשלח /learn_stop כדי לעצור."
+        )
+
     if open_recs:
         msg += "\n\n*🎯 פתוחות עכשיו:*"
         for r in open_recs:
@@ -1102,8 +1418,12 @@ def cmd_help(chat_id: int):
 /analyze — המכוון מנתח ומציע שיפורים
 /advance — עבור לשלב הבא (כשהקריטריונים מתקיימים)
 
-🎯 *פייפר היסטורי (שלב 1):*
-/run — סשן למידה היסטורי (לא פעיל עכשיו - אתה בשלב 2)
+🌙 *למידת לילה (זמנים מתים):*
+/learn\\_start — אימון רצוף על דאטה היסטורי (משבית auto-scan)
+/learn\\_stop — עוצר למידה ומחזיר auto-scan ללייב
+
+🎯 *פייפר היסטורי ידני:*
+/run — סשן למידה יחיד
 
 ⚙️ *מערכת:*
 /stop — עצור פעולה רצה
@@ -1136,6 +1456,10 @@ COMMANDS = {
     "/live_status": cmd_live_status,
     "/livestatus": cmd_live_status,      # alias בלי קו תחתון
     "/pulse": cmd_pulse,                  # מה קורה עכשיו ברקע
+    "/learn_start": cmd_learn_start,      # מפעיל למידת לילה (משבית auto-scan)
+    "/learnstart": cmd_learn_start,
+    "/learn_stop": cmd_learn_stop,        # עוצר למידה ומחזיר auto-scan
+    "/learnstop": cmd_learn_stop,
     "/stop": stop_session,
     "/help": cmd_help,
 }
@@ -1221,6 +1545,11 @@ def main():
     summary_thread = threading.Thread(target=_daily_summary_loop, daemon=True)
     summary_thread.start()
     print("🌙 Daily summary פעיל - תקציר יומי ב-23:00.")
+
+    # 4. Training loop - רץ רק כשמצב למידה דלוק (/learn_start)
+    training_thread = threading.Thread(target=_training_loop, daemon=True)
+    training_thread.start()
+    print("🎓 Training loop פעיל - ממתין ל-/learn_start.")
 
     print("\nProgressing... Ctrl+C לעצירה.")
     print("=" * 60)

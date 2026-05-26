@@ -5,7 +5,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 
-SYMBOL = "BTCUSDT"
+SYMBOL = "BTCUSDT"  # default / back-compat (single-symbol callers)
+SYMBOLS = ["BTCUSDT", "ETHUSDT"]  # auto-scanner מסתובב ביניהם
 TIMEFRAME_ANALYSIS = "15m"
 TIMEFRAME_TREND = "4h"
 
@@ -17,7 +18,7 @@ LESSONS_FILE = MEMORY_DIR / "lessons.json"
 ACCOUNT_FILE = MEMORY_DIR / "account.json"
 LOGS_DIR = ROOT / "logs"
 
-RISK_PER_TRADE_PCT = 1.0
+RISK_PER_TRADE_PCT = 5.0  # פייפר אגרסיבי - ללמידה מהירה יותר
 MIN_RISK_REWARD = 1.5
 MAX_DRAWDOWN_PCT = 15.0
 
