@@ -942,7 +942,29 @@ def load_system_state() -> dict:
 # שעושה למידה היסטורית - עסקה אחרי עסקה, עם התראות בטלגרם.
 
 TRAINING_MODE_FILE = ROOT / "memory" / "training_mode.json"
+PAUSE_FILE = ROOT / "memory" / "system_pause.json"
 LEARN_SCRIPT = ROOT / "scripts" / "learn_daily.py"
+
+
+def is_paused() -> bool:
+    """מתג השבתה ראשי - כשפעיל, כל ה-loops האוטומטיים שותקים."""
+    if not PAUSE_FILE.exists():
+        return False
+    try:
+        import json as _json
+        return bool(_json.loads(PAUSE_FILE.read_text()).get("paused"))
+    except Exception:
+        return False
+
+
+def set_paused(paused: bool, reason: str = ""):
+    import json as _json
+    PAUSE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PAUSE_FILE.write_text(_json.dumps({
+        "paused": paused,
+        "reason": reason,
+        "updated_at": datetime.now().isoformat(),
+    }, ensure_ascii=False, indent=2))
 
 
 def get_training_state() -> dict:
@@ -987,6 +1009,10 @@ def _training_loop():
     time.sleep(75)  # אחרי שה-scanner מתעורר, כדי לא להתחיל ביחד
     while True:
         try:
+            if is_paused():
+                time.sleep(15)
+                continue
+
             if not is_training_mode():
                 time.sleep(15)
                 continue
@@ -1023,11 +1049,15 @@ def _training_loop():
                     log_f.flush()
                     # start_new_session=True → הקבוצת תהליכים שלנו. ב-timeout הורגים את כל הקבוצה
                     # ולא רק את התהליך הישיר → לא יוצרים זומבי-Claude יתום
+                    # מעבירים TRADING_TRAINING_MODE=1 כדי שה-learn_daily ידע
+                    # להוריד את הסף ולהפעיל את הוועדה במצב נדיב
+                    env = {**os.environ, "TRADING_TRAINING_MODE": "1"}
                     proc = subprocess.Popen(
                         [sys.executable, "-u", str(LEARN_SCRIPT)],
                         cwd=str(ROOT),
                         stdout=log_f, stderr=subprocess.STDOUT,
                         start_new_session=True,
+                        env=env,
                     )
                     try:
                         returncode = proc.wait(timeout=1500)
@@ -1085,12 +1115,23 @@ def _training_loop():
                         emoji, verdict = "🔴", "הפסד"
 
                     acc = load_account()
+                    # חישוב הפסד/רווח האמיתי ברמת החשבון - לא פר-יחידה.
+                    # update_account_after_trade עושה: pnl_usd = balance_before × pnl_pct / 200
+                    # אז: balance_before = balance_after / (1 + pnl_pct/200)
+                    # ו-account_pnl_usd = balance_after - balance_before (מדויק לסנט)
+                    balance_after = acc['current_balance']
+                    if pnl and pnl != 0:
+                        balance_before = balance_after / (1 + pnl / 200)
+                        account_pnl_usd = round(balance_after - balance_before, 2)
+                    else:
+                        account_pnl_usd = 0.0
+
                     msg = (
                         f"{emoji} *למידה - סשן {session_num} - {verdict}*\n\n"
                         f"📊 {sym} {setup.get('סוג', '?')} {decision.get('החלטה', '?')}\n"
-                        f"💵 P/L: {pnl:+.2f}% (${sim.get('pnl_usd_per_unit', 0):+.2f})\n"
+                        f"💵 P/L חשבון: {pnl:+.2f}% (${account_pnl_usd:+.2f})\n"
                         f"⏱ {elapsed_min:.1f} דק' (החזקה {sim.get('minutes_held', 0)} דק')\n"
-                        f"💰 יתרה: ${acc['current_balance']:,.2f}\n"
+                        f"💰 יתרה: ${balance_after:,.2f}\n"
                         f"📈 סה\"כ: {sessions_done} סשנים, {wins}W/{losses}L"
                     )
                     if lesson and lesson not in (None, "אין לקח חדש", "null"):
@@ -1156,6 +1197,47 @@ def _training_loop():
             time.sleep(30)
 
 
+def cmd_pause(chat_id: int):
+    """מתג חירום - עוצר את כל הפעילות האוטומטית של הבוט (scanner, training, monitor)."""
+    already_paused = is_paused()
+    # תמיד גם מכבים learn mode אם פעיל
+    learn_was_on = is_training_mode()
+    if learn_was_on:
+        set_training_state(enabled=False, stopped_at=datetime.now().isoformat())
+
+    set_paused(True, reason="/pause command")
+
+    parts = ["⛔ *הבוט הושבת לחלוטין*\n"]
+    parts.append("• Auto-Scanner חי: עצור")
+    parts.append("• Live Monitor: עצור (המלצות פתוחות לא יישלחו)")
+    parts.append("• Training Loop: עצור")
+    if learn_was_on:
+        parts.append("• מצב למידה כובה אוטומטית")
+    if already_paused:
+        parts.append("\n(הבוט כבר היה במצב מושבת)")
+
+    parts.append("\n⚠️ סשני סבטרד שכבר רצים יסיימו את עצמם.")
+    parts.append("שלח /resume כדי להחזיר הכל לפעולה.")
+    parts.append("שלח /pulse כדי לראות סטטוס.")
+    send_message(chat_id, "\n".join(parts), parse_mode="")
+
+
+def cmd_resume(chat_id: int):
+    """מבטל את ההשבתה - מחזיר scanner חי + monitor לפעולה."""
+    if not is_paused():
+        send_message(chat_id, "ℹ️ הבוט לא היה מושבת. הכל כבר רץ.")
+        return
+    set_paused(False, reason="/resume command")
+    send_message(
+        chat_id,
+        "✅ *הבוט הופעל מחדש*\n\n"
+        "• Auto-Scanner חי: רץ (BTC + ETH מתחלפים)\n"
+        "• Live Monitor: רץ (בודק פתוחות כל 5 דק')\n"
+        "• Training Loop: מוכן, ממתין ל-/learn_start אם תרצה\n\n"
+        "שלח /pulse לפרטים.",
+    )
+
+
 def cmd_learn_start(chat_id: int):
     """מפעיל מצב למידה - אימון רצוף על דאטה היסטורי, ה-auto-scanner של הלייב נפסק."""
     if is_training_mode():
@@ -1206,6 +1288,114 @@ def cmd_learn_stop(chat_id: int):
     )
 
 
+SHADOW_FEEDBACK_FILE = ROOT / "memory" / "shadow_feedback_state.json"
+SHADOW_FEEDBACK_BATCH = 10  # כל 10 דחיות צל - מפעילים את המכוון
+
+
+def _get_shadow_feedback_state() -> dict:
+    if not SHADOW_FEEDBACK_FILE.exists():
+        return {"last_processed_count": 0, "runs": 0}
+    try:
+        import json as _json
+        return _json.loads(SHADOW_FEEDBACK_FILE.read_text())
+    except Exception:
+        return {"last_processed_count": 0, "runs": 0}
+
+
+def _set_shadow_feedback_state(**kwargs):
+    state = _get_shadow_feedback_state()
+    state.update(kwargs)
+    state["updated_at"] = datetime.now().isoformat()
+    import json as _json
+    SHADOW_FEEDBACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SHADOW_FEEDBACK_FILE.write_text(_json.dumps(state, ensure_ascii=False, indent=2))
+
+
+def _shadow_feedback_loop():
+    """
+    כל 60 שניות בודק כמה דחיות-צל יש בזיכרון. אם הצטברו 10 חדשות מאז
+    הריצה האחרונה - מפעיל את המכוון על הדאטה החדש, מיישם המלצות באוטומט
+    (priority 8+), ושולח סיכום בטלגרם. ככה ה-shadow data באמת הופך ללקחים.
+    """
+    time.sleep(120)  # אחרי שכל ה-loops האחרים התעוררו
+    while True:
+        try:
+            time.sleep(60)
+            if is_paused():
+                continue
+
+            trades = load_trades()
+            shadow = [t for t in trades if t.get("status") == "shadow_rejected"]
+            cur_count = len(shadow)
+            state = _get_shadow_feedback_state()
+            last = state.get("last_processed_count", 0)
+
+            if cur_count - last < SHADOW_FEEDBACK_BATCH:
+                continue  # עוד לא הצטברו מספיק חדשות
+
+            authorized = get_authorized_chat_id()
+            if not authorized:
+                continue
+
+            new_batch = cur_count - last
+            print(f"[shadow_fb] {new_batch} דחיות חדשות - מפעיל מכוון")
+            send_message(
+                authorized,
+                f"🧠 *פידבק צל: {new_batch} דחיות חדשות → מכוון*",
+                parse_mode="",
+            )
+
+            # מפעילים את המכוון על הדאטה המלא (כולל החדש)
+            lessons = load_lessons()
+            from agents.llm import call_claude  # כבר מיובא; שמירה ליתר ביטחון
+            config_snapshot = {
+                "RISK_PER_TRADE_PCT": RISK_PER_TRADE_PCT,
+                "MIN_RISK_REWARD": MIN_RISK_REWARD,
+                "MIN_HUNTER_QUALITY": 4,
+                "SYMBOL": SYMBOL,
+            }
+
+            try:
+                tuner_result = run_tuner(trades, lessons, config_snapshot, verbose=False)
+                parsed = tuner_result.get("parsed") or {}
+                recs = parsed.get("המלצות") or []
+                if not recs:
+                    send_message(authorized, "🧠 המכוון: אין המלצות חדשות מהדאטה", parse_mode="")
+                else:
+                    apply_result = apply_recommendations(parsed)
+                    auto = apply_result.get("applied_auto") or []
+                    judge_q = apply_result.get("sent_to_judge") or []
+                    rejected = apply_result.get("rejected") or []
+                    msg = (
+                        f"🧠 *פידבק צל הושלם*\n\n"
+                        f"📊 ניתח: {new_batch} דחיות חדשות (סה\"כ {cur_count})\n"
+                        f"💡 המלצות: {len(recs)}\n"
+                        f"  ✅ הוחל אוטומטית: {len(auto)}\n"
+                        f"  ⚖️ נשלח לשופט: {len(judge_q)}\n"
+                        f"  ❌ נדחה אוטומטית: {len(rejected)}"
+                    )
+                    if auto:
+                        msg += "\n\n*שינויים שהוחלו:*"
+                        for a in auto[:5]:
+                            msg += f"\n• {a.get('summary', '?')[:120]}"
+                    send_message(authorized, msg, parse_mode="")
+
+                _set_shadow_feedback_state(
+                    last_processed_count=cur_count,
+                    runs=state.get("runs", 0) + 1,
+                    last_recs_count=len(recs),
+                )
+            except Exception as e:
+                print(f"[shadow_fb] שגיאה בהפעלת מכוון: {e}")
+                send_message(authorized, f"⚠️ פידבק צל נכשל: {str(e)[:200]}", parse_mode="")
+                # רושמים בכל זאת שעיבדנו - כדי לא להיתקע על אותה כמות
+                _set_shadow_feedback_state(last_processed_count=cur_count)
+
+        except Exception as e:
+            print(f"⚠️ shadow_feedback_loop: {e}")
+            time.sleep(30)
+
+
 def _live_auto_scanner_loop():
     """רץ ברקע - סורק את השוק החי אוטומטית, מתחלף בין סימבולים (BTC/ETH)."""
     MAX_OPEN_RECS = 3  # לא יותר מ-3 המלצות פתוחות בו-זמנית
@@ -1216,6 +1406,12 @@ def _live_auto_scanner_loop():
     interval = max(60, 900 // max(len(SYMBOLS), 1))
     while True:
         try:
+            # מתג השבתה ראשי
+            if is_paused():
+                update_system_state(scanner_status="paused")
+                time.sleep(interval)
+                continue
+
             authorized = get_authorized_chat_id()
             acc = load_account()
             if not authorized or acc.get("stage", 1) < 2:
@@ -1279,6 +1475,9 @@ def _live_monitor_loop():
     while True:
         try:
             time.sleep(300)  # 5 דקות
+            if is_paused():
+                update_system_state(monitor_status="paused")
+                continue
             authorized = get_authorized_chat_id()
             if not authorized:
                 continue
@@ -1345,10 +1544,12 @@ def cmd_pulse(chat_id: int):
         "running": "🟢 סורק עכשיו (בודק שוק)",
         "idle": "🟡 ממתין לסריקה הבאה",
         "paused_for_training": "⏸ מושהה - מצב למידה דלוק",
+        "paused": "⛔ מושבת (/pause)",
     }.get(scanner_st, scanner_st)
     monitor_he = {
         "checking": "🟢 בודק עכשיו",
         "idle": "🟡 ממתין לבדיקה הבאה",
+        "paused": "⛔ מושבת (/pause)",
     }.get(monitor_st, monitor_st)
 
     # תיאור תוצאת הסריקה האחרונה
@@ -1360,7 +1561,11 @@ def cmd_pulse(chat_id: int):
         "hunter_error": "🔴 הצייד נכשל",
     }.get(last_result, last_result or "אין נתונים")
 
-    msg = f"""💓 *פעימת לב המערכת*
+    pause_banner = ""
+    if is_paused():
+        pause_banner = "\n⛔ *הבוט מושבת* (/resume להחזיר)\n"
+
+    msg = f"""💓 *פעימת לב המערכת*{pause_banner}
 
 🤖 *Auto-Scanner*
 מצב: {scanner_he}
@@ -1425,8 +1630,12 @@ def cmd_help(chat_id: int):
 🎯 *פייפר היסטורי ידני:*
 /run — סשן למידה יחיד
 
+🛑 *שליטה ראשית:*
+/pause — *מתג חירום* - עוצר הכל (scanner+monitor+training)
+/resume — מחזיר את הכל לפעולה
+
 ⚙️ *מערכת:*
-/stop — עצור פעולה רצה
+/stop — עצור פעולה רצה (סשן ספציפי)
 /help — תפריט זה
 
 💬 *אפשר גם לכתוב שאלות חופשיות* כמו "כמה הרווחנו?" - הבוט עונה באנלוגיות פשוטות.
@@ -1460,6 +1669,13 @@ COMMANDS = {
     "/learnstart": cmd_learn_start,
     "/learn_stop": cmd_learn_stop,        # עוצר למידה ומחזיר auto-scan
     "/learnstop": cmd_learn_stop,
+    "/pause": cmd_pause,                  # מתג חירום - עוצר הכל
+    "/pauseall": cmd_pause,
+    "/pause_all": cmd_pause,
+    "/halt": cmd_pause,
+    "/resume": cmd_resume,                # מחזיר את הבוט לפעולה
+    "/resumeall": cmd_resume,
+    "/resume_all": cmd_resume,
     "/stop": stop_session,
     "/help": cmd_help,
 }
@@ -1550,6 +1766,11 @@ def main():
     training_thread = threading.Thread(target=_training_loop, daemon=True)
     training_thread.start()
     print("🎓 Training loop פעיל - ממתין ל-/learn_start.")
+
+    # 5. Shadow feedback - כל 10 דחיות צל מפעיל את המכוון אוטומטית
+    shadow_thread = threading.Thread(target=_shadow_feedback_loop, daemon=True)
+    shadow_thread.start()
+    print(f"🧠 Shadow feedback פעיל - מפעיל מכוון כל {SHADOW_FEEDBACK_BATCH} דחיות.")
 
     print("\nProgressing... Ctrl+C לעצירה.")
     print("=" * 60)

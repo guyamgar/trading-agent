@@ -3,13 +3,13 @@
   "stage": 2,
   "stage_description": "פייפר טרייד עם נתוני לייב - להגיע ליעד חדש",
   "starting_balance": 1000.82,
-  "current_balance": 997.47,
+  "current_balance": 1034.78,
   "target_balance": 2001.64,
-  "highest_balance": 1000.82,
-  "lowest_balance": 997.47,
-  "trades_taken": 6,
-  "wins": 1,
-  "losses": 5,
+  "highest_balance": 1034.78,
+  "lowest_balance": 495.97,
+  "trades_taken": 59,
+  "wins": 32,
+  "losses": 27,
   "stage_started_at": "2026-05-24T15:27:33.365272",
   "milestones_hit": [],
   "stage_history": [
@@ -20,5 +20,13 @@
       "ended_at": "2026-05-24T15:27:33.365260"
     }
   ],
-  "last_auto_analyze_at": 44
+  "last_auto_analyze_at": 44,
+  "manual_corrections": [
+    {
+      "trade_id": "14d135a3",
+      "reason": "target_1=0 bug refund",
+      "amount": 500.0,
+      "at": "2026-05-26T12:18:58.272721"
+    }
+  ]
 }

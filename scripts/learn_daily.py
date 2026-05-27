@@ -13,6 +13,7 @@
     cd ~/Desktop/Agents_markering/trading_agent
     python3 scripts/learn_daily.py
 """
+import os
 import sys
 import random
 from pathlib import Path
@@ -37,7 +38,13 @@ SESSION_MAX_SCANS = 25           # תקרה לסשן - גם בלי 3 כניסו�
 LOOKBACK_CANDLES = 700           # ~7 ימי 15m
 CONTEXT_BEFORE = 250             # נרות לתקציר השוק (כמו ה-live)
 SIM_FORWARD_CANDLES = 96         # מקסימום 24 שעות החזקה
-MIN_HUNTER_QUALITY = 4           # הורד מ-5 - הוועדה היא פילטר אמיתי
+
+# מצב אימון לילי - מופעל ע"י הבוט דרך env var.
+# במצב זה: סף איכות נמוך יותר לצייד + הוועדה יותר נדיבה (ראה orchestrator).
+TRAINING_MODE = os.environ.get("TRADING_TRAINING_MODE", "0") == "1"
+MIN_HUNTER_QUALITY = 3 if TRAINING_MODE else 4   # אימון: 3 ; רגיל: 4
+if TRAINING_MODE:
+    print(f"🎓 [learn_daily] TRAINING MODE ACTIVE — Hunter quality ≥{MIN_HUNTER_QUALITY}, ועדה נדיבה")
 
 
 def pick_simulation_anchors(total_candles: int, n: int) -> list:
@@ -99,7 +106,7 @@ def run_one_trade(df, anchor_idx: int, trade_num: int, total_trades: int) -> dic
 
     # 2) ועדה
     print(f"\n[2/5] הוועדה מנתחת את ה-setup...")
-    committee = run_committee(summary, setup=best, lessons=lessons, history=load_trades(), verbose=False)
+    committee = run_committee(summary, setup=best, lessons=lessons, history=load_trades(), verbose=False, training_mode=TRAINING_MODE)
     decision = committee["head_decision"]["parsed"]
 
     advocate_result = None
@@ -375,7 +382,7 @@ def run_sequential_session(df, target_trades: int) -> list:
         best = max(valid, key=lambda s: s.get("ציון_איכות", 0))
         print(f"  ✓ Setup: {best['סוג']} {best['כיוון']} (ציון {best['ציון_איכות']}) — מפעיל ועדה...")
 
-        committee = run_committee(summary, setup=best, lessons=lessons, history=load_trades(), verbose=False)
+        committee = run_committee(summary, setup=best, lessons=lessons, history=load_trades(), verbose=False, training_mode=TRAINING_MODE)
         decision = committee["head_decision"]["parsed"]
 
         if not decision or decision.get("החלטה") not in ("LONG", "SHORT"):

@@ -86,20 +86,32 @@ def run_advisor(role_name: str, system_prompt: str, market_summary: dict,
 def run_committee(market_summary: dict, setup: Optional[dict] = None,
                   lessons: Optional[List[Dict]] = None,
                   history: Optional[List[Dict]] = None,
-                  verbose: bool = True) -> Dict[str, Any]:
+                  verbose: bool = True,
+                  training_mode: bool = False,
+                  account_balance_usd: Optional[float] = None) -> Dict[str, Any]:
     """
     מריץ את הצוות המייעץ + ראש הצוות.
     אם הגיע setup מהצייד - הוא נשלח לכל המומחים כקלט נוסף.
     אם הגיעו לקחים - גם הם נמסרים לוועדה.
     אם הגיעה היסטוריית עסקאות - החוקר ההיסטורי רץ במקביל.
+    אם הועבר account_balance_usd - מנהל הסיכונים יחשב גודל פוזיציה ממנו במקום מ-$10K.
     """
+    # תופסים את היתרה האמיתית - אם לא הועברה, נמשוך מהזיכרון.
+    # ככה Risk Manager לא יקצה פוזיציות עצומות על חשבון של $500.
+    if account_balance_usd is None:
+        try:
+            from memory_store import load_account
+            account_balance_usd = float(load_account().get("current_balance", 1000) or 1000)
+        except Exception:
+            account_balance_usd = 1000.0
+
     extra: Optional[Dict] = {}
     if setup:
         extra["setup_from_hunter"] = setup
     if lessons:
         extra["lessons_from_past_trades"] = lessons
-    if not extra:
-        extra = None
+    extra["account_balance_usd"] = account_balance_usd
+    extra["risk_per_trade_pct"] = 5.0  # פייפר אגרסיבי
 
     advisors = [
         ("המנתח הטכני", prompts.TECHNICAL_ANALYST, "sonnet"),
@@ -147,16 +159,102 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
     if lessons:
         head_input["lessons_from_past_trades"] = lessons
 
+    training_hint = ""
+    if training_mode:
+        training_hint = """
+
+🎓 **מצב אימון לילי פעיל - הוראות נוספות:**
+אנחנו במצב למידה אגרסיבי. המטרה: לאסוף יותר עסקאות סגורות שמהן ה-coach ייצור לקחים.
+- תהיה יותר נדיב: setup עם 1-2 yellow lights אבל המתמטיקה תקינה → אישור
+- "להמתין" של קורא ההקשר ≠ וטו אוטומטי; שקול אותו כאזהרה רגילה
+- חוקר היסטורי עם מדגם < 8 → התעלם מהווטו שלו
+- חמש אורות אדומים שונים = דחייה (לא שלושה)
+
+**אבל ה-fees הם קדושים:**
+- T1 גרוס < 0.4% מהכניסה = דחייה תמיד (גם באימון; טרייד מתמטית מפסיד)
+- וטו של מנהל הסיכונים על RR_net < 1.3 = דחייה תמיד
+
+המטרה: יותר עסקאות שילמדו אותנו, לא יותר עסקאות שיפסידו לנו כסף."""
+
     head_user_msg = f"""שמעת את שלושת המומחים. הנה הסיכום:
 ```json
 {json.dumps(head_input, indent=2, ensure_ascii=False)}
 ```
 
-קבל החלטה והחזר JSON לפי הפורמט שלך."""
+קבל החלטה והחזר JSON לפי הפורמט שלך.{training_hint}"""
 
     head_start = time.time()
     head_response = call_claude(head_user_msg, prompts.HEAD_TRADER, model="sonnet")
     head_elapsed = time.time() - head_start
+
+    # ─── ולידציה קריטית: הוועדה אסור שתחזיר החלטה עם מספרים שבורים ───
+    # באג ידוע: אם ראש הצוות החליט שT1 פסול עמלות, הוא לעיתים שם 0 במקום מחיר תקין.
+    # במורד הזרם המוניטור רואה target_1=0 ומפענח כ"היעד התממש" → רישום -100% הפסד.
+    # פה אנחנו תופסים את זה ומבטלים את העסקה (אין כניסה) במקום לאשר שטויות.
+    if head_response.parsed and not head_response.is_error:
+        decision = head_response.parsed
+        action = decision.get("החלטה")
+        if action in ("LONG", "SHORT"):
+            entry = decision.get("כניסה") or 0
+            stop = decision.get("סטופ") or 0
+            t1 = decision.get("יעד_1") or 0
+            t2 = decision.get("יעד_2") or 0
+
+            # סף עמלות קשיח: T1 חייב להיות לפחות 0.4% מהכניסה כדי לכסות עמלות (0.2%) + רווח אמיתי
+            MIN_T1_DISTANCE_PCT = 0.4
+
+            def _passes_fee_check(target_price: float, entry_price: float) -> bool:
+                """True רק אם המרחק מהכניסה ≥ 0.4%"""
+                if entry_price <= 0 or target_price <= 0:
+                    return False
+                return abs(target_price - entry_price) / entry_price * 100 >= MIN_T1_DISTANCE_PCT
+
+            invalid_reason = None
+            if entry <= 0:
+                invalid_reason = f"כניסה לא תקינה ({entry})"
+            elif stop <= 0:
+                invalid_reason = f"סטופ לא תקין ({stop})"
+            elif t1 <= 0:
+                # אם T1 פסול אבל T2 תקין - מאמצים את T2 כיעד היחיד, אך רק אם T2 עובר את חוק העמלות
+                if t2 > 0:
+                    side_ok = (action == "LONG" and t2 > entry) or (action == "SHORT" and t2 < entry)
+                    fee_ok = _passes_fee_check(t2, entry)
+                    if side_ok and fee_ok:
+                        decision["יעד_1"] = t2
+                        decision["יעד_2"] = None
+                        decision["סיבה_להחלטה"] = "[VALIDATOR: T1=0 הוחלף ב-T2 (עבר חוק עמלות)] " + str(decision.get("סיבה_להחלטה", ""))[:280]
+                    elif not side_ok:
+                        invalid_reason = f"גם T2 לא תקין (action={action}, entry={entry}, T2={t2})"
+                    else:  # side_ok=True אבל fee_ok=False
+                        t2_dist_pct = abs(t2 - entry) / entry * 100
+                        invalid_reason = f"T2 לא עובר עמלות: מרחק {t2_dist_pct:.2f}% < {MIN_T1_DISTANCE_PCT}% מינימום"
+                else:
+                    invalid_reason = f"T1={t1} ו-T2={t2} - אין יעד תקין"
+            elif action == "LONG" and t1 <= entry:
+                invalid_reason = f"LONG אבל T1 ({t1}) ≤ כניסה ({entry})"
+            elif action == "SHORT" and t1 >= entry:
+                invalid_reason = f"SHORT אבל T1 ({t1}) ≥ כניסה ({entry})"
+            elif action == "LONG" and stop >= entry:
+                invalid_reason = f"LONG אבל סטופ ({stop}) ≥ כניסה ({entry})"
+            elif action == "SHORT" and stop <= entry:
+                invalid_reason = f"SHORT אבל סטופ ({stop}) ≤ כניסה ({entry})"
+            elif not _passes_fee_check(t1, entry):
+                # חגורת בטחון: אפילו אם T1 בכיוון הנכון, חייב לעבור 0.4% עמלות
+                t1_dist_pct = abs(t1 - entry) / entry * 100
+                invalid_reason = f"T1 לא עובר עמלות: מרחק {t1_dist_pct:.2f}% < {MIN_T1_DISTANCE_PCT}% מינימום"
+
+            if invalid_reason:
+                if verbose:
+                    print(f"  🚨 VALIDATOR: דחיית החלטה פגומה — {invalid_reason}")
+                # מבטלים - לא לוקחים עסקה עם מספרים שבורים
+                head_response.parsed = {
+                    "החלטה": "אין כניסה",
+                    "סיבה_להחלטה": f"VALIDATOR REJECT: {invalid_reason}. החלטה מקורית: {str(decision)[:300]}",
+                    "כניסה": 0, "סטופ": 0, "יעד_1": 0, "יעד_2": 0,
+                    "גודל_פוזיציה_USD": 0, "ביטחון_1_10": 0,
+                    "_validator_rejected": True,
+                    "_validator_reason": invalid_reason,
+                }
 
     if verbose:
         status = "✗" if head_response.is_error else "✓"

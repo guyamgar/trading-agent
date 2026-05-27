@@ -127,5 +127,226 @@
     "lesson_id": "6a82b609",
     "title": "מחיקת Lesson 6a82b609 - 50% accuracy על exit strategy",
     "applied_at": "2026-05-25T20:59:47.872582"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "e0e1c4db",
+    "applied_at": "2026-05-26T06:20:52.293742"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "c0d8e549",
+    "rule": "Lesson חדש: 'Bounce LONG = וטו כאשר: RSI > 70 ב-candle ה-entry או ה-candle שלפניו (תנודה הבונס מעל-extended). בונס מצליח כאשר מתחיל בRSI 50-70 עם support ברור.'",
+    "applied_at": "2026-05-26T06:20:52.296717"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הדאטה מראה סימפטום (45% WR, -1.26% PnL) אבל אין הוכחה ישירה. הדוגמאות שניתנו (23a2b2bb, de552233, וואחרות) מודגמות כ'likely' בעלות quality נמוך - לא בוודאות. לא מופיע בנתונים: (1) את quality score בפו",
+    "rec_title": "MIN_HUNTER_QUALITY: 4 → 5",
+    "applied_at": "2026-05-26T06:21:20.264079"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "הדאטה לא עומדת בתנאי המינימום. n=1 בלבד (עסקה יחידה בקטגוריה Breakout LONG) מול דרישה של n≥3. המכוון עצמו מודה ב'דגימה קטנה (n=1)' ו'אין יידע וטו מוחלט'. עלייה בconfidence של 2→8 (שינוי של +300%) על ב",
+    "rec_title": "Breakout LONG - העלאת זהירות (לא וטו עדיין)",
+    "applied_at": "2026-05-26T06:21:45.909497"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "name": "MIN_HUNTER_QUALITY",
+    "old": 4.0,
+    "new": 5.0,
+    "applied_at": "2026-05-26T08:24:39.997901"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "נתונים לא מובילים להחלטה. הנתונים מראים רק לקח אחד עם 53/72 נכונות (73.6%). המלצה טוענת שזה 'הטוב ביותר' ו'משמעותית מעל ממוצע' אך אין שום השוואה למערכת כולה או לשלוש דוגמאות נוספות. טענה כי 'כל שאר הל",
+    "rec_title": "חזק 'שני אורות אדומים' - הלקח הטוב ביותר במערכת",
+    "applied_at": "2026-05-26T08:25:04.366491"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "e0e1c4db",
+    "applied_at": "2026-05-26T08:25:48.685204"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "דרישה קשיחה: מינימום 3 דוגמאות להחלטה. הנתונים מציגים invoked=2, correct=2 (100% accuracy). דגימה של n=2 בלבד אינה מספקת להצדיק קפיצת confidence משמעותית מ-3 ל-7. עם גודל מדגם כזה, הסיכון לoverfitting",
+    "rec_title": "חזק Bounce LONG RSI<30 veto - עובד ב-100% באחרונות",
+    "applied_at": "2026-05-26T08:26:09.691935"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "906f586f",
+    "rule": "הוסף לקח חדש: 'Bounce LONG אסור אם: RSI < 40 OR EMA לא aligned (9>21>50>200) OR pattern_age < 60min'",
+    "applied_at": "2026-05-26T08:26:09.696751"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "e0e1c4db",
+    "applied_at": "2026-05-26T12:36:57.847042"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "name": "MIN_HUNTER_QUALITY",
+    "old": 4.0,
+    "new": 5.0,
+    "applied_at": "2026-05-26T12:36:57.848507"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "f3cc8073",
+    "applied_at": "2026-05-26T12:36:57.850054"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "c0d8e549",
+    "applied_at": "2026-05-26T12:36:57.851342"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "00b128d6",
+    "applied_at": "2026-05-26T12:37:28.493175"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים לא מצדיקים עלייה משמעותית מ-4 ל-7 (75%). המדגם קטן מדי: 5 invocations בלבד. למרות שהצלחה בשיעור 80% (4/5) היא חיובית, זה אינו מספיק כדי להצדיק קפיצה כזו בערך ביטחוני. נוסף על כך: (1) הנימוק מכ",
+    "rec_title": "הרם confidence לBounce LONG EMA alignment וטו (906f586f)",
+    "applied_at": "2026-05-26T12:37:59.429303"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "4da31104",
+    "rule": "הוסף לקח חדש: 'LONG direction veto: מותר LONG בהשגת אחד מהתנאים: (1) 9>21>50>200 EMA בOrder (bullish full stack) AND (2) RSI > 55 בcandle entry AND (3) Volume > 1.5x average. אחרת - וטו מוחלט בלי over",
+    "applied_at": "2026-05-26T14:22:57.971948"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "f3cc8073",
+    "applied_at": "2026-05-26T14:22:57.975392"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "7cda5b0f",
+    "rule": "הוסף לקח חדש: 'Pullback LONG veto כאשר: (RSI < 40 OR EMA stack לא aligned כ-9>21>50>200 OR pattern_age < 60 דקות). מטרה: להפריד בין Pullback LONG חלש (דחייה) לבין Pullback SHORT חזק (אישור).'",
+    "applied_at": "2026-05-26T14:22:57.977797"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "00b128d6",
+    "applied_at": "2026-05-26T14:22:57.980278"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "ההמלצה מתבססת על תיאוריה ('פטרנים בconf נמוך') ולא על נתונים קונקרטיים של התוצאה. הנתונים המסופקים מראים: (1) 20 עסקאות אחרונות עם 25% win rate ו-3.34% PnL שלילי - ביצוע ירוד מובהק. (2) 3 דוגמאות של ע",
+    "rec_title": "הגברת MIN_HUNTER_QUALITY: 5 → 6",
+    "applied_at": "2026-05-26T14:23:22.430623"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "aad1a151",
+    "applied_at": "2026-05-26T14:23:53.534826"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "f3cc8073",
+    "applied_at": "2026-05-26T16:10:11.282040"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-26T16:10:11.284498"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "מדגם סטטיסטי לא מספיק. Lesson 00b128d6 נבדק ב-7 invocations בלבד עם 6 הצלחות (86% accuracy). גודל זה קטן מדי כדי להצדיק עלייה אגרסיבית בconfidence של 67% (מ-9 ל-15). הדוגמאות התומכות חלשות: דוגמה 1 הי",
+    "rec_title": "הגבר confidence: RSI<30 veto for Bounce LONG (00b128d6)",
+    "applied_at": "2026-05-26T16:10:34.233210"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "e4bb9b66",
+    "applied_at": "2026-05-26T16:11:20.512308"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הנתונים המצורפים אינם תומכים בהמלצה. קיבלתי רק סטטיסטיקה כוללת (20 trades אחרונות: 40% WR, -0.78% PnL), אך הנימוק מדבר על בעיה ספציפית בlessons בconf=4-5 עם n=4. חיסרון קריטי: אין breakdown של ה-20 tr",
+    "rec_title": "הגבר סף איכות צייד: MIN_HUNTER_QUALITY 4 → 5",
+    "applied_at": "2026-05-26T16:11:47.218816"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-26T19:36:39.719767"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "6c7825b9",
+    "applied_at": "2026-05-26T19:37:01.114539"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "הדאטה חלקית בלבד. יש 65.4% accuracy (17/26) אך זה לא מספיק לאישור. בעיות קריטיות: (1) דוגמה תומכת #2 מתייחסת ל'משפט מעיד' שלא קיים בנתונים המצורפים - ראיה לא מוצקה. (2) ללא הגדרה ברורה של סקלת confide",
+    "rec_title": "הורדת Lesson 756b9671 - סטופ < עמלה חלש",
+    "applied_at": "2026-05-26T19:37:53.675582"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-26T21:56:29.276941"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-26T21:56:29.280022"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "ההמלצה מתבססת על השוואה: '70.8% הוא הנמוך ביותר בין lessons המופעלים בתדירות גבוהה (השאר: 72-76%)', אך בנתונים המסופקים מוצג רק lesson 741d744a בלבד. אין נתונים השוואתיים של lessons אחרים כדי לאשר ש-7",
+    "rec_title": "הורדת אמון ב-lesson ניהול BB (741d744a) - ביצוע חלש יחסית",
+    "applied_at": "2026-05-26T21:56:56.204916"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים מצביעים על ביצועים חיוביים של lesson 4a73a7e2 (43/56 = 76.8% win rate), אך ההמלצה חסרה המנעות קריטיות: (1) אין הגדרה של confidence ויחידות המדידה - לא ברור מה משנה '18 → 20'; (2) אין ממצא סטטי",
+    "rec_title": "חיזוק meta-lesson על גודל דגימה (4a73a7e2)",
+    "applied_at": "2026-05-26T21:57:23.013751"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "lesson_id": "756b9671",
+    "title": "מחיקת lesson 756b9671 - 'Stop distance < fees' הוא לא absolutist",
+    "applied_at": "2026-05-27T00:41:56.690943"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "סתירה חיונית בנתונים: ההמלצה מסתמכת על טענה שה-WR הוא 58%, אך הנתונים הממשיים מראים 70% WR ב-20 הטריידים האחרונים (14 ניצחונות מתוך 20). אם הביצועים בפועל הם 70% ולא 58%, ההנמקה המרכזית להגבהה ל-MIN_H",
+    "rec_title": "הגבהת MIN_HUNTER_QUALITY מ-4 ל-5",
+    "applied_at": "2026-05-27T00:42:18.175412"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "8febaac7",
+    "rule": "הוסף lesson חדש: {id: 'xxx_small_profit_whitelist', rule: 'אל תפעל Continuation SHORT veto (f3cc8073) או Exhaustion reversal veto (53000525) כאשר T1 ≤ 0.25% — RR נמוך מדי, false rejection עלות > upsid",
+    "applied_at": "2026-05-27T00:42:18.180102"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "נתונים חלקיים ותמיכה לא חד משמעית. קיבלתי נתון מלא על lesson אחד בלבד (aad1a151: 55 ok/76 invoked = 72.4% WR עם confidence 22). החסרים: (1) אין נתונים בפועל על f3cc8073 ו-e0e1c4db - רק טענות ללא מספרי",
+    "rec_title": "הורדת confidence בlessonים בHigh-confidence-but-medium-WR",
+    "applied_at": "2026-05-27T00:42:42.460153"
   }
 ]
