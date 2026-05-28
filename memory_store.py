@@ -33,6 +33,73 @@ def load_lessons() -> List[Dict]:
     return data.get("lessons", [])
 
 
+def decay_stale_lesson_confidence(stale_days: int = 30, decay_per_week: int = 1,
+                                   min_floor_confidence: int = 0) -> Dict:
+    """
+    דעיכת confidence ללקחים לא פעילים.
+    הסיבה: לקחים ישנים עם confidence גבוה משתקים את הוועדה ומונעים גילוי דפוסים חדשים.
+    אם לקח לא הופעל ב-stale_days הימים האחרונים (לפי updated_at) — מוריד -1 לשבוע התיישנות.
+
+    מחזיר dict: {affected, total_decay, decayed_lessons[]}
+    """
+    lessons = load_lessons()
+    now = datetime.utcnow()
+    affected = []
+
+    for l in lessons:
+        ts_str = l.get("updated_at") or l.get("created_at")
+        if not ts_str:
+            continue
+        try:
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            if ts.tzinfo is not None:
+                ts = ts.replace(tzinfo=None)
+        except Exception:
+            continue
+
+        days_idle = (now - ts).days
+        if days_idle < stale_days:
+            continue
+
+        # כמה שבועות מעבר ל-stale_days
+        weeks_overstale = max(1, (days_idle - stale_days) // 7 + 1)
+        decay = decay_per_week * weeks_overstale
+        old_conf = l.get("confidence", 0)
+        new_conf = max(min_floor_confidence, old_conf - decay)
+        if new_conf == old_conf:
+            continue
+
+        l["confidence"] = new_conf
+        l.setdefault("decay_history", []).append({
+            "at": now.isoformat(),
+            "old": old_conf,
+            "new": new_conf,
+            "days_idle": days_idle,
+        })
+        affected.append({
+            "id": l.get("id"),
+            "rule": (l.get("rule", "") or "")[:80],
+            "old": old_conf,
+            "new": new_conf,
+            "days_idle": days_idle,
+        })
+
+    # שומרים כל הקובץ פעם אחת בסוף — חוסך כתיבות
+    if affected:
+        data = json.loads(LESSONS_FILE.read_text())
+        if isinstance(data, list):
+            LESSONS_FILE.write_text(json.dumps(lessons, ensure_ascii=False, indent=2))
+        else:
+            data["lessons"] = lessons
+            LESSONS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+
+    return {
+        "affected_count": len(affected),
+        "total_decay": sum(a["old"] - a["new"] for a in affected),
+        "decayed_lessons": affected,
+    }
+
+
 def save_trade(trade: Dict) -> str:
     """
     שומר עסקה (חדשה או מעודכנת). מחזיר את ה-id.

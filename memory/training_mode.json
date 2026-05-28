@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "started_at": "2026-05-26T13:08:46.143349",
-  "sessions_done": 49,
-  "sessions_failed": 13,
-  "wins": 30,
-  "losses": 19,
+  "sessions_done": 161,
+  "sessions_failed": 22,
+  "wins": 117,
+  "losses": 44,
   "stopped_at": "2026-05-26T12:01:21.836617",
-  "updated_at": "2026-05-27T05:18:10.540277",
-  "current_session_started": "2026-05-27T05:18:10.540109",
-  "current_session_num": 63,
+  "updated_at": "2026-05-28T05:27:27.785926",
+  "current_session_started": null,
+  "current_session_num": null,
   "stopped_reason": "BUG: target_1=0 → -100% loss"
 }

@@ -4,7 +4,7 @@
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
 from memory_store import (
@@ -16,6 +16,55 @@ from agents.orchestrator import run_judge
 ROOT = Path(__file__).parent
 OVERRIDES_FILE = ROOT / "memory" / "overrides.json"
 APPLY_HISTORY = ROOT / "memory" / "apply_history.json"
+PENDING_APPROVALS_FILE = ROOT / "memory" / "pending_approvals.json"
+
+
+def load_pending_approvals() -> List[Dict]:
+    if not PENDING_APPROVALS_FILE.exists():
+        return []
+    try:
+        return json.loads(PENDING_APPROVALS_FILE.read_text())
+    except Exception:
+        return []
+
+
+def save_pending_approvals(items: List[Dict]):
+    PENDING_APPROVALS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PENDING_APPROVALS_FILE.write_text(json.dumps(items, ensure_ascii=False, indent=2))
+
+
+def add_pending_approval(rec: Dict) -> str:
+    """שומר המלצה שדורשת אישור ידני עם כל המידע. מחזיר ID קצר."""
+    import uuid
+    items = load_pending_approvals()
+    short_id = str(uuid.uuid4())[:8]
+    items.append({
+        "id": short_id,
+        "status": "pending",
+        "type": rec.get("סוג", "?"),
+        "title": rec.get("כותרת", "")[:200],
+        "action": rec.get("פעולה_מדויקת", "")[:1500],
+        "reason": rec.get("נימוק", "")[:800],
+        "risk": rec.get("סיכון_שבירה", "")[:400],
+        "priority": rec.get("עדיפות", 0),
+        "created_at": datetime.utcnow().isoformat(),
+    })
+    save_pending_approvals(items)
+    return short_id
+
+
+def update_approval_status(short_id: str, status: str, note: str = "") -> Optional[Dict]:
+    """status = 'approved' או 'rejected'. מחזיר את הפריט המעודכן או None."""
+    items = load_pending_approvals()
+    for it in items:
+        if it["id"] == short_id and it["status"] == "pending":
+            it["status"] = status
+            it["resolved_at"] = datetime.utcnow().isoformat()
+            if note:
+                it["resolution_note"] = note[:400]
+            save_pending_approvals(items)
+            return it
+    return None
 
 
 # פרמטרים שמותר לכוון אוטומטית עם גבולות בטוחים
@@ -180,7 +229,9 @@ def apply_recommendations(parsed_report: Dict) -> Dict[str, List[str]]:
                     rejected.append(f"⚠️ פרמטר {title} - מחוץ לגבולות בטוחים, לא יושם")
 
             elif typ in ("AGENT_REFINE", "NEW_AGENT"):
-                manual.append(f"🙋 {typ}: {title} (עדיפות {priority}) - דורש אישור ידני")
+                # נשמר עם תוכן מלא כדי שהמשתמש יוכל לקרוא ולאשר/לדחות אחר כך
+                short_id = add_pending_approval(r)
+                manual.append(f"🙋 [{short_id}] {typ}: {title} (עדיפות {priority})")
 
             else:
                 rejected.append(f"❓ סוג לא מוכר {typ}: {title}")

@@ -348,5 +348,382 @@
     "reason": "נתונים חלקיים ותמיכה לא חד משמעית. קיבלתי נתון מלא על lesson אחד בלבד (aad1a151: 55 ok/76 invoked = 72.4% WR עם confidence 22). החסרים: (1) אין נתונים בפועל על f3cc8073 ו-e0e1c4db - רק טענות ללא מספרי",
     "rec_title": "הורדת confidence בlessonים בHigh-confidence-but-medium-WR",
     "applied_at": "2026-05-27T00:42:42.460153"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "38db1cbc",
+    "rule": "צור לקח חדש: 'Dead Cat Bounce SHORT = וטו קשיח בלתי ניתן לעקיפה. דפוס זה מציין bounce שאין לו כוח לעצור טרנד דובי - כניסה למסוג זה תמיד מסכנת.'",
+    "applied_at": "2026-05-27T03:14:45.984818"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "aad1a151",
+    "applied_at": "2026-05-27T03:14:45.988385"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "הסטנדרט החייב: מינימום 3 דוגמאות לאישור. הממליץ הציג דוגמה אחת בלבד (eaba33e1 עם הפסד -0.485%). בנוסף, נתונים תומכים ריקים לחלוטין ({}). אין סטטיסטיקה היסטורית, אין השוואה בחזקת תנאים חדשים, אין הוכחה",
+    "rec_title": "Engulfing SHORT: וטו אלא אם תנאים דובים חזקים",
+    "applied_at": "2026-05-27T03:15:03.767843"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "ההמלצה מבוססת על Lesson aad1a151 עם confidence=22 בלבד - ערך בטחון נמוך מדיי לשינוי פרמטר. הנתונים התומכים (65% win_rate, 4.61% pnl ב-20 עסקאות אחרונות) אינם מציגים בעיה מוצדקת בהלכדים בציון 4 או over",
+    "rec_title": "MIN_HUNTER_QUALITY: 4 → 5",
+    "applied_at": "2026-05-27T03:15:26.817298"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T03:49:19.364820"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "aad1a151",
+    "applied_at": "2026-05-27T03:49:19.371067"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "דגימה קטנה מדי לאישור וטו אבסולוטי. הנתונים מכילים: (1) 4 ניסיונות בלבד, (2) 2 כישלונות (STOP) בלבד - לא עומד בקריטריון של 'מינימום 3 דוגמאות', (3) 50% failure rate על n=4 הוא עלול להיות שונות אקראית ",
+    "rec_title": "וטו קשיח ל-Bounce (Dead Cat) SHORT בגלל 50% loss rate",
+    "applied_at": "2026-05-27T03:49:52.008878"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "חוסר התאמה קריטי בין נתוני ההמלצה לבין הנתונים הנוכחיים: (1) ההמלצה מבוססת על sample של 15 טראדות עם 27% loss rate בציון 5, אך הנתונים הנוכחיים (last_20_trades) מראים 70% win rate (14 wins מתוך 20) - ",
+    "rec_title": "הגדל MIN_HUNTER_QUALITY מ-5 ל-6 לסינון setups חלשים",
+    "applied_at": "2026-05-27T03:50:22.450440"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T03:53:41.752552"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-27T03:53:41.764965"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ab23bd72",
+    "applied_at": "2026-05-27T03:53:41.769505"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "35f2e375",
+    "applied_at": "2026-05-27T03:53:41.773272"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "53000525",
+    "applied_at": "2026-05-27T03:53:41.777079"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "00b128d6",
+    "applied_at": "2026-05-27T03:53:41.780143"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "6affe025",
+    "applied_at": "2026-05-27T03:53:41.783305"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "95f003d0",
+    "applied_at": "2026-05-27T03:53:41.786052"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "c0d8e549",
+    "applied_at": "2026-05-27T03:53:41.788933"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים תומכים בחלקית בבעיה, אך אינם מסיימים לצדיקת הכשל כפי שהוצע. הנתונים: 17/24 נצחונות (70.83%) זו אכן נמוכה, אך בלי 3 קטעי מידע קריטיים לא יכול לאשר הורדה של 50% בconfidence (6→3). חסרים: (1) נתו",
+    "rec_title": "BB Squeeze + MACD Bullish + Full EMA = מוגזם",
+    "applied_at": "2026-05-27T03:54:16.360393"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "אין נתונים סטטיסטיים מלאים להתמך בהמלצה. המשוקל שסופק כולל 3 עסקאות בלבד: שתיים נכשלו (264f20ae, 315b267b - STOP), אחת הצליחה (70dc90e9 - target_1). זה משקף win rate של 33% בדוגמאות הקיימות. בנוסף, הנ",
+    "rec_title": "Dead Cat Bounce בטרנד דובי = וטו מחוזק",
+    "applied_at": "2026-05-27T03:54:46.751018"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "ההמלצה חורגת מהדרישה הבסיסית: מינימום 3 דוגמאות נדרשות לאישור. בנתונים יש דוגמה אחת בודדת (eaba33e1 עם STOP -0.485). בנוסף, הנתונים התומכים ריקים לחלוטין ({}), כלומר אין סטטיסטיקה על קצב כשל של Engulf",
+    "rec_title": "Engulfing SHORT בתנאים חלשים = וטו חזק",
+    "applied_at": "2026-05-27T03:55:11.540928"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הדאטה המסופק לא תומך בהחלטה כי הוא לא מפורק לפי MIN_HUNTER_QUALITY scores. קיבלתי רק: (1) win_rate כללי 70% מ-20 trades אחרונים, (2) ללא שום היסטוגרמה של quality scores. כדי לאשר/לדחות את ההמלצה היו צ",
+    "rec_title": "שקול בדיקה: האם MIN_HUNTER_QUALITY צריך להיות 6 במקום 5?",
+    "applied_at": "2026-05-27T03:55:31.745142"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T05:02:03.672130"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-27T05:02:03.675055"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים מציגים 88.9% win rate (8/9 invocations) שהיא תוצאה טובה, אך המדגם קטן מדי כדי להצדיק עלייה כל כך משמעותית בconfidence. העלאה בחמש נקודות (מ-9 ל-14 = +55.6%) לעבור רק 9 דוגמאות חוזרת על סיכון ג",
+    "rec_title": "ترفيع Exhaustion SHORT + RSI normalization (6affe025)",
+    "applied_at": "2026-05-27T05:02:52.407965"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "גודל המדגם קטן מדי (n=7 invocations בלבד). עם 7 invocations וסטיית תקן גבוהה, win rate של 85.7% יכול להיות תוצאה של וריאציה סטטיסטית טבעית, לא דפוס אמיתי. עבור שינוי confidence משמעותי (11→15, עלייה ש",
+    "rec_title": "ترفيע RSI <30 veto בעל Bounce LONG (00b128d6)",
+    "applied_at": "2026-05-27T05:03:19.139112"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "סתירה ישירה בנתונים. ההמלצה מתבססת על win rate של 58.3% (63/108 trades) כבסיס להחלטה, אך הנתונים החדשים שקיבלתי מראים win rate של 65% ב-20 trades אחרונות. זו סתירה חמורה: אם 65% הוא הביצוע הנוכחי, אז ",
+    "rec_title": "הגדל סף איכות מינימלי להיתוך לקחים (MIN_HUNTER_QUALITY)",
+    "applied_at": "2026-05-27T05:03:52.464716"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T07:59:45.577548"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "חסרים נתונים קריטיים. ההמלצה מבוססת על 2 לקחים (f3cc8073 ו-aad1a151), אך קיבלתי נתונים מלאים רק עבור אחד. לקח aad1a151 המוזכה בהמלצה וללא נתונים תומכים. בנוסף, הנתונים שקיבלתי מראים: f3cc8073 בעל דיוק",
+    "rec_title": "הורדת confidence של 2 לקחים בעלי דיוק 72% רק",
+    "applied_at": "2026-05-27T08:00:11.132950"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הנתונים אינם תומכים בהמלצה. בעיות קריטיות: (1) הדוגמאות (3 עסקאות שדוחו בטעות) מוכיחות שה-shadow committee טעה, אך לא מוכיחות שהגדלת MIN_HUNTER_QUALITY מ-4 ל-5 תתקן את זה. (2) אין נתונים 'לפני/אחרי' ש",
+    "rec_title": "הגדלת MIN_HUNTER_QUALITY מ-4 ל-5",
+    "applied_at": "2026-05-27T08:00:36.015345"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים מראים 10/12 הפעלות נכונות (83.3% accuracy), אך גם 2 failures משמעותיים (16.7% failure rate). ההמלצה מעלה את confidence מ-8 ל-11, מה שיהופך את הלקח לוטו בלתי ניתן לעקיפה. בעיה קריטית: עם confid",
+    "rec_title": "חיזוק וטו של Dead Cat Bounce SHORT",
+    "applied_at": "2026-05-27T08:01:03.855582"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "נתונים תומכים ריקים לגמרי ({}). דוגמאות לא מספיקות: (1) דוגמה אחת בלבד שעברה - 79443d46 עם +0.646 (חסרות 2 דוגמאות נוספות למינימום), (2) e0e1c4db ו-f3cc8073 הם וטו בלבד - אין תוצאה ממשית (הפסד/רווח) ש",
+    "rec_title": "ייצור קריטיריונים חדים יותר לחסימת Continuation SHORT",
+    "applied_at": "2026-05-27T08:01:29.764870"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "דחייה חד-משמעית. (1) מספיק דוגמאות: סופקה דוגמה אחת בלבד (eaba33e1), המינימום הנדרש הוא 3. (2) אין נתונים סטטיסטיים: השדה 'נתונים תומכים' ריק לחלוטין - חסרים: אחוז הצלחה של Engulfing SHORT, ממוצע הפסד",
+    "rec_title": "לקח חדש: Engulfing SHORT הוא דפוס בעל סיכון גבוה מעל סף מסוים",
+    "applied_at": "2026-05-27T08:01:49.198486"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "f3cc8073",
+    "applied_at": "2026-05-27T12:23:41.679940"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "e0e1c4db",
+    "applied_at": "2026-05-27T12:23:41.683893"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T12:23:41.687137"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-27T12:23:41.690159"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "הנתונים התומכים ריקים לחלוטין ({}). ההמלצה מסתמכת על דוגמה יחידה בודדת (33754aa9 = -0.724) ללא כל סטטיסטיקה כלל. נדרשות מינימום 3 דוגמאות עם דפוס חוזר להוספת וטו לקח. דוגמה אחת בודדת אינה הוכחה על דפו",
+    "rec_title": "וטו קשיח ל-Engulfing SHORT pattern",
+    "applied_at": "2026-05-27T12:24:01.057239"
+  },
+  {
+    "type": "NEW_LESSON",
+    "judge_rejected": true,
+    "reason": "הנתונים מראים אמנם ביצוע SHORT חלש (-16.1%, 3 wins vs 4 losses) בהשוואה ל-LONG (+26.3%), אך הם לא מוכיחים שהתנאי הכפול (EMA stack + [RSI<25 OR MACD<-100]) יפתור זאת. חסרה בדיקה רטרוספקטיבית (backtesti",
+    "rec_title": "דרישה כפולה ל-SHORT: EMA Stack + (RSI<25 OR MACD<-100)",
+    "applied_at": "2026-05-27T12:24:29.715460"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "שדה 'נתונים תומכים' **ריק לחלוטין** ({}). ההמלצה טוענת לסטטיסטיקה (SHORT -16.1%, LONG +26.3%) אבל לא צירפה אפילו שורה אחת של דאטה בפועל. בנוסף: רק 2 דוגמאות מובאות (0ff64f53, ac038996) וצריכים 3 מינימ",
+    "rec_title": "שינוי Hunter Agent - הוסף סטנדרטים גבוהים ל-SHORT",
+    "applied_at": "2026-05-27T12:24:48.633352"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "35f2e375",
+    "applied_at": "2026-05-27T13:49:38.606990"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "e0e1c4db",
+    "applied_at": "2026-05-27T13:49:38.611127"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "נתונים לא חד משמעיים להעלאה ל-confidence 10: (1) Sample size של 12 invocations קטן מדי לעלייה משמעותית כזו - 2 failures = 16.7% failure rate, לא נמוך. (2) Reference ל-Engulfing SHORT (33754aa9) שהפסיד",
+    "rec_title": "פרומוציה Dead Cat Bounce SHORT וטו (38db1cbc) מ-8→10",
+    "applied_at": "2026-05-27T13:50:03.277124"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "c0d8e549",
+    "applied_at": "2026-05-27T13:51:00.463609"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-27T13:51:22.261867"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T16:53:55.755933"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "35f2e375",
+    "applied_at": "2026-05-27T16:53:55.762413"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "53000525",
+    "applied_at": "2026-05-27T16:53:55.767944"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "name": "MIN_HUNTER_QUALITY",
+    "old": 4.0,
+    "new": 5.0,
+    "applied_at": "2026-05-27T18:12:56.312745"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "0ff64f53",
+    "applied_at": "2026-05-27T18:13:25.269008"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "ac038996",
+    "applied_at": "2026-05-27T18:13:44.961542"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "008e94f6",
+    "rule": "הוסף לקח חדש: 'SHORT Default Veto - אל תיכנס SHORT אלא אם: (a) EMA stack דובי מלא (9<21<50<200) + MACD < -100 (לא רק -50) + RSI > 65 (exhaustion חזק). בכל מצב אחר, וטו מוחלט ל-SHORT. REASON: בדגימה הא",
+    "applied_at": "2026-05-27T18:13:44.965797"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "lesson_id": "00b128d6",
+    "applied_at": "2026-05-27T18:14:10.842134"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "גודל הדגימה חסר משמעות סטטיסטית: SHORT נכשל ב-0% בדגימה של 3 טריידים בלבד - זה לא מספיק לדחיקת שינוי מערכתי בהנחיות האגנט. בנוסף: (1) לא צוין כמה LONG trades היוו את ה-64% - אם היו 5-10 בלבד, ההשוואה ",
+    "rec_title": "תיקון הנחיית ה-Hunter לפריטוריטיזציה של LONG על SHORT",
+    "applied_at": "2026-05-27T18:14:37.579524"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "fe5eab55",
+    "rule": "הוסף lesson חדש עם confidence=18: 'Pullback LONG = עדיפות על Continuation SHORT בטרנד עולה עם EMA stack בולית מלאה (9<21<50<200) + MACD > -50. הכנס כמו זה, לא כ-veto, כדי לא לזרוק SHORT combinations.'",
+    "applied_at": "2026-05-27T19:32:37.390076"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "הנתונים המסופקים (20 trades אחרונים, 70% win rate, 6.04% PnL) אינם מכילים את המידע הקריטי הדרוש לאישור. ההמלצה עצמה מודה בכך: 'הדאטה בקלט לא מפורטה מספיק' ו'צריך breakdown מפורש של quality scores על s",
+    "rec_title": "העלה MIN_HUNTER_QUALITY: 5 → 6",
+    "applied_at": "2026-05-27T19:32:57.601179"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "הנתונים התומכים שקיבלתי הם ריקים ({}). אין סטטיסטיקה כמותית, אין דוגמאות ממשיות, אין השוואה מדדים בין Pullback LONG ל-Continuation SHORT. ההמלצה טוענת על 'כל 6 Pullback LONG בדוגמה' אך לא סופקו הנתוני",
+    "rec_title": "תקן את סדר העדיפות לצייד: חזק את Pullback LONG, חלש את Continuation SHORT",
+    "applied_at": "2026-05-27T19:33:18.834160"
+  },
+  {
+    "type": "NEW_LESSON",
+    "lesson_id": "3f8a6996",
+    "rule": "הוסף לקח חדש: 'Bounce LONG + EMA Stack עולה (9>21>50>200) + RSI > 60 + MACD > 0 = וטו מוחלט על Continuation SHORT בהוצאה קשה. רק סוג זה של Bounce תופס upside מוזז (ו-9fec1e60 היה כנראה הדוגמה הזו). co",
+    "applied_at": "2026-05-28T02:11:23.956781"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "judge_rejected": true,
+    "reason": "הנתונים לא תומכים חד משמעית בהמלצה. הטענה הראשית ('המורות של c0d8e549 כבר נתפסת בlessons אחרים') היא הנחה לוגית, לא עובדה מוכחת בדאטא. עובדות: (1) c0d8e549 עם hit rate=75% (9/12) - זה תקין, לא נמוך. (",
+    "rec_title": "מחק c0d8e549 - וטו Bounce LONG יתר (redundant)",
+    "applied_at": "2026-05-28T02:11:54.826246"
+  },
+  {
+    "type": "LESSON_DELETE",
+    "judge_rejected": true,
+    "reason": "הדאטה לא תומכת בהמלצה. נתונים קיימים: lesson 38db1cbc - confidence=8, invoked=12, correct=10, wrong=2 (83% דיוק). בעיות במלצה: (1) ביסוד ה'דוגמאות התומכות' אין השוואה כמותית ישירה עם b6a52793 ו-ab23bd",
+    "rec_title": "מחק 38db1cbc - Dead Cat Bounce וטו קשה (specific מדי)",
+    "applied_at": "2026-05-28T02:12:19.214658"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "lesson_id": "00b128d6",
+    "applied_at": "2026-05-28T02:12:56.934773"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "הנתונים מציגים 100% דיוק (5/5 correct invocations) - זה תמיכה חזקה בלסון, לא חלשה. ההמלצה להורדה משמעותית confidence מ-8 ל-3 אינה נתמכת בדאטה הנוכחית. כן, n=5 זה מדגם קטן, אבל: (1) עדיין עולה על מינימ",
+    "rec_title": "Lesson 35f2e375 (RSI 36-43) - הורד confidence 8→3",
+    "applied_at": "2026-05-28T02:13:42.579318"
+  },
+  {
+    "type": "LESSON_DEMOTE",
+    "judge_rejected": true,
+    "reason": "הדאטה לא תומך בהורדה משמעותית מ-7 ל-4. המספרים: n=9, hit_rate=78% (7 נכונות מ-9 invocations). 78% זו סטטיסטיקה טובה ולא ברורה - אם הגיוני להוריד confidence מ-7 ל-4 עבור hit_rate של 78%? אין baseline ב",
+    "rec_title": "Lesson 95f003d0 (RSI<5 exhaustion) - הורד confidence 7→4",
+    "applied_at": "2026-05-28T02:14:11.900916"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "נתונים תומכים חסרים לחלוטין: JSON הנתונים ריק {}. הדוגמאות היחידות (9fec1e60: 0.456, a11c64c9: 0.264) מוצגות כ'ייתכן Bounce LONG?' - זו שאלה, לא עובדה מוכחת. כדי לאשר צריך: (1) סטטיסטיקה קונקרטית משור",
+    "rec_title": "Agent Pullback - התאם עדיפות Bounce LONG גבוהה יותר מ-Continuation SHORT check",
+    "applied_at": "2026-05-28T02:14:35.798869"
   }
 ]

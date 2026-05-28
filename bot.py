@@ -1396,6 +1396,267 @@ def _shadow_feedback_loop():
             time.sleep(30)
 
 
+DECAY_STATE_FILE = ROOT / "memory" / "lesson_decay_state.json"
+
+
+def _get_decay_state() -> dict:
+    if not DECAY_STATE_FILE.exists():
+        return {}
+    try:
+        import json as _json
+        return _json.loads(DECAY_STATE_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _set_decay_state(**kwargs):
+    state = _get_decay_state()
+    state.update(kwargs)
+    state["updated_at"] = datetime.now().isoformat()
+    import json as _json
+    DECAY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    DECAY_STATE_FILE.write_text(_json.dumps(state, ensure_ascii=False, indent=2))
+
+
+def _lesson_decay_loop():
+    """
+    רץ פעם ב-24h: דעיכת confidence על לקחים שלא הופעלו 30+ יום.
+    מונע מצב שבו לקחים ישנים עם confidence גבוה משתקים את הוועדה.
+    """
+    from memory_store import decay_stale_lesson_confidence
+    # ראשון - מחכה 5 דקות אחרי startup, רץ פעם אחת מיד
+    time.sleep(300)
+    while True:
+        try:
+            if is_paused():
+                time.sleep(3600)
+                continue
+
+            state = _get_decay_state()
+            last_run_str = state.get("last_run_at")
+            # רץ פעם ב-24 שעות
+            if last_run_str:
+                try:
+                    last_run = datetime.fromisoformat(last_run_str)
+                    if (datetime.now() - last_run).total_seconds() < 23 * 3600:
+                        time.sleep(3600)
+                        continue
+                except Exception:
+                    pass
+
+            print(f"[decay] {datetime.now().strftime('%H:%M:%S')} - מריץ דעיכת confidence")
+            result = decay_stale_lesson_confidence(stale_days=30, decay_per_week=1, min_floor_confidence=0)
+            _set_decay_state(
+                last_run_at=datetime.now().isoformat(),
+                last_affected=result["affected_count"],
+                last_total_decay=result["total_decay"],
+            )
+
+            authorized = get_authorized_chat_id()
+            if authorized and result["affected_count"] > 0:
+                top_decayed = sorted(
+                    result["decayed_lessons"],
+                    key=lambda x: x["old"] - x["new"],
+                    reverse=True,
+                )[:5]
+                msg = (
+                    f"🍂 *דעיכת confidence יומית*\n\n"
+                    f"📊 {result['affected_count']} לקחים נדעכו\n"
+                    f"📉 סך ירידת confidence: {result['total_decay']}\n\n"
+                )
+                if top_decayed:
+                    msg += "*Top 5 ירידות:*\n"
+                    for d in top_decayed:
+                        msg += (
+                            f"• `{d['id']}` {d['old']}→{d['new']} "
+                            f"({d['days_idle']}d חוסר פעילות)\n"
+                            f"  _{d['rule'][:60]}..._\n"
+                        )
+                send_message(authorized, msg, parse_mode="")
+
+            time.sleep(3600)  # בודק שוב בעוד שעה (אבל לא ירוץ אלא אם עברו 23h)
+        except Exception as e:
+            print(f"⚠️ lesson_decay_loop: {e}")
+            time.sleep(3600)
+
+
+def _regime_detector_loop():
+    """
+    כל 6 שעות בודק אם השוק שינה אופי באופן מובהק (z-score ≥ 2σ).
+    שולח התראה רק כש-regime חדש מזוהה (לא חוזר על אותה התראה).
+    """
+    from regime_detector import check_and_persist
+    time.sleep(180)  # ממתין שהבוט יציב לפני קריאת API
+    while True:
+        try:
+            if is_paused():
+                time.sleep(6 * 3600)
+                continue
+
+            for symbol in SYMBOLS:
+                print(f"[regime] {datetime.now().strftime('%H:%M')} בודק {symbol}...")
+                try:
+                    result = check_and_persist(symbol)
+                except Exception as e:
+                    print(f"[regime] שגיאה ב-{symbol}: {e}")
+                    continue
+
+                if result.get("error"):
+                    print(f"[regime] {symbol}: {result['error']}")
+                    continue
+
+                authorized = get_authorized_chat_id()
+                if not authorized:
+                    continue
+
+                # מתריעים רק על שינוי חדש (לא נשלח שוב על אותו state)
+                if result.get("is_new_alert"):
+                    shifts = result.get("shifts", {})
+                    msg = (
+                        f"🌪 *שינוי משטר שוק זוהה — {symbol}*\n\n"
+                        f"⚠️ {result['explanation']}\n\n"
+                        f"📊 *מטריקה בולטת:* {result['max_shift_metric']}\n"
+                        f"   z-score: {result['max_shift_z']:+.2f}σ (סף: 2.0σ)\n\n"
+                    )
+                    # נראה את כל המטריקות בקצרה
+                    metric_he = {
+                        "atr_pct_mean": "תנודתיות",
+                        "rsi_mean": "RSI ממוצע",
+                        "trend_strength_pct": "כוח טרנד",
+                        "body_to_range": "אופי נרות",
+                    }
+                    for m, label in metric_he.items():
+                        if m in shifts:
+                            s = shifts[m]
+                            z = s.get("z_score", 0)
+                            marker = "🚨" if abs(z) >= 2 else "•"
+                            msg += f"{marker} {label}: {s.get('baseline_mean', '?')}→{s.get('current', '?')} ({z:+.1f}σ)\n"
+                    msg += (
+                        f"\n💡 *מה זה אומר?*\n"
+                        f"7 ימים אחרונים מתנהגים שונה מ-30 הימים שלפניהם. "
+                        f"לקחים ישנים עלולים פחות מדויקים. שווה לעבור על /lessons "
+                        f"ולשקול /pause עד שהוועדה מסתגלת."
+                    )
+                    send_message(authorized, msg, parse_mode="")
+                else:
+                    # רק לוג, לא הודעה
+                    print(f"[regime] {symbol}: יציב (max z={result.get('max_shift_z', 0):+.2f}σ)")
+
+            time.sleep(6 * 3600)  # 6 שעות בין בדיקות
+        except Exception as e:
+            print(f"⚠️ regime_detector_loop: {e}")
+            time.sleep(6 * 3600)
+
+
+HOLDOUT_STATE_FILE = ROOT / "memory" / "holdout_loop_state.json"
+
+
+def _get_holdout_state() -> dict:
+    if not HOLDOUT_STATE_FILE.exists():
+        return {}
+    try:
+        import json as _json
+        return _json.loads(HOLDOUT_STATE_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _set_holdout_state(**kwargs):
+    state = _get_holdout_state()
+    state.update(kwargs)
+    state["updated_at"] = datetime.now().isoformat()
+    import json as _json
+    HOLDOUT_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    HOLDOUT_STATE_FILE.write_text(_json.dumps(state, ensure_ascii=False, indent=2))
+
+
+def _format_holdout_telegram(result: dict) -> str:
+    """מפרמט תוצאת backtest להודעת טלגרם עם השוואת in-sample vs out-of-sample."""
+    msg = f"🧪 *Hold-out Backtest — {result.get('symbol', '?')}*\n\n"
+    msg += f"📅 חלון: {result.get('holdout_window_days')} ימים אחורה\n"
+    msg += f"🎲 {result['n_samples']} דגימות אקראיות\n\n"
+
+    msg += "*📊 על דאטה שלא נראתה (out-of-sample):*\n"
+    msg += f"• נכנסו: {result['n_executed']}/{result['n_samples']}\n"
+    if result['n_executed'] > 0:
+        msg += f"• Win Rate: {result['win_rate_pct']}% ({result['wins']}W/{result['losses']}L)\n"
+        msg += f"• P/L ממוצע: {result['avg_pnl_pct']:+.2f}%\n"
+        msg += f"• P/L מצטבר: {result['total_pnl_pct']:+.2f}%\n"
+    msg += f"• דחויות ע\"י הוועדה: {result['n_rejected']}\n"
+    msg += f"• אין setup: {result['n_no_setup']}\n"
+    if result['n_errors'] > 0:
+        msg += f"• שגיאות: {result['n_errors']}\n"
+
+    insm = result.get("in_sample") or {}
+    if insm.get("n", 0) > 0:
+        msg += f"\n*📈 השוואה — ביצועי לייב אחרונים ({insm['days']} ימים):*\n"
+        msg += f"• {insm['n']} עסקאות, WR {insm['win_rate_pct']}%, P/L ממוצע {insm['avg_pnl_pct']:+.2f}%\n"
+
+        # הערכת overfitting
+        wr_diff = result['win_rate_pct'] - insm['win_rate_pct']
+        if abs(wr_diff) >= 20:
+            verdict = "🚨 *הבדל גדול — חשד ל-overfitting!*" if wr_diff < 0 else "✅ *הכללה טובה (אפילו טוב יותר על דאטה לא נראה)*"
+        elif abs(wr_diff) >= 10:
+            verdict = "⚠️ *הבדל בינוני — לעקוב*" if wr_diff < 0 else "✅ *הכללה סבירה*"
+        else:
+            verdict = "✅ *הכללה טובה — אותם ביצועים על דאטה לא נראה*"
+        msg += f"\n{verdict}\n"
+        msg += f"_הבדל ב-WR: {wr_diff:+.1f}%_"
+    else:
+        msg += "\n_אין דיי דאטה in-sample להשוואה_"
+    return msg
+
+
+def _holdout_backtest_loop():
+    """
+    רץ פעם בחודש (30 ימים). מריץ backtest על דאטה היסטורי שהמערכת לא ראתה
+    ומשווה את הביצועים לביצועים האחרונים. אם יש פער גדול = חשד overfitting.
+    """
+    from holdout_backtest import run_holdout_backtest
+    time.sleep(600)  # ממתין 10 דק' אחרי startup
+    while True:
+        try:
+            if is_paused():
+                time.sleep(12 * 3600)
+                continue
+
+            state = _get_holdout_state()
+            last_run = state.get("last_run_at")
+            if last_run:
+                try:
+                    last = datetime.fromisoformat(last_run)
+                    if (datetime.now() - last).days < 30:
+                        time.sleep(12 * 3600)
+                        continue
+                except Exception:
+                    pass
+
+            authorized = get_authorized_chat_id()
+            if not authorized:
+                time.sleep(12 * 3600)
+                continue
+
+            send_message(authorized, "🧪 *Hold-out Backtest חודשי מתחיל...*\nבודק על 10 דגימות מ-30-60 ימים אחורה. ~5-10 דק'.", parse_mode="")
+            print(f"[holdout] {datetime.now().strftime('%H:%M')} מתחיל backtest חודשי")
+            try:
+                result = run_holdout_backtest("BTCUSDT", n_samples=10)
+                if result.get("error"):
+                    send_message(authorized, f"❌ Backtest נכשל: {result['error']}", parse_mode="")
+                else:
+                    send_message(authorized, _format_holdout_telegram(result), parse_mode="")
+                _set_holdout_state(last_run_at=datetime.now().isoformat(),
+                                   last_result_summary={"wr": result.get("win_rate_pct"),
+                                                       "executed": result.get("n_executed")})
+            except Exception as e:
+                send_message(authorized, f"⚠️ Backtest נכשל: {str(e)[:200]}", parse_mode="")
+                _set_holdout_state(last_run_at=datetime.now().isoformat(), last_error=str(e)[:200])
+
+            time.sleep(12 * 3600)
+        except Exception as e:
+            print(f"⚠️ holdout_backtest_loop: {e}")
+            time.sleep(12 * 3600)
+
+
 def _live_auto_scanner_loop():
     """רץ ברקע - סורק את השוק החי אוטומטית, מתחלף בין סימבולים (BTC/ETH)."""
     MAX_OPEN_RECS = 3  # לא יותר מ-3 המלצות פתוחות בו-זמנית
@@ -1605,6 +1866,183 @@ def cmd_pulse(chat_id: int):
     send_message(chat_id, msg, parse_mode="")
 
 
+def cmd_pending(chat_id: int):
+    """מציג את כל ההמלצות שממתינות לאישור ידני."""
+    from auto_apply import load_pending_approvals
+    items = load_pending_approvals()
+    pending = [i for i in items if i.get("status") == "pending"]
+
+    if not pending:
+        send_message(chat_id, "✅ אין המלצות שממתינות לאישור.", parse_mode="")
+        return
+
+    msg = f"🙋 *{len(pending)} המלצות ממתינות לאישור ידני*\n\n"
+    for it in pending:
+        msg += f"━━━ ID: `{it['id']}` ━━━\n"
+        msg += f"📌 *{it['type']}* (עדיפות {it.get('priority', '?')}/10)\n"
+        msg += f"*{it['title']}*\n\n"
+        if it.get('action'):
+            msg += f"📝 פעולה: {it['action'][:500]}\n\n"
+        if it.get('reason'):
+            msg += f"💭 נימוק: {it['reason'][:300]}\n\n"
+        if it.get('risk'):
+            msg += f"⚠️ סיכון שבירה: {it['risk'][:200]}\n"
+        msg += f"🕐 {it.get('created_at','?')[:16]}\n\n"
+    msg += f"📋 *לאישור/דחייה:*\n"
+    msg += f"/approve <id> — מסמן כמאושר (אז תבקש ממני ליישם)\n"
+    msg += f"/reject <id> — מסיר מהרשימה"
+    send_message(chat_id, msg, parse_mode="")
+
+
+def cmd_approve(chat_id: int, text: str = ""):
+    """מסמן המלצה כמאושרת. שימוש: /approve <8-char-id>"""
+    from auto_apply import update_approval_status
+    parts = text.split()
+    if len(parts) < 2:
+        send_message(chat_id, "❓ שימוש: `/approve <id>` (8 תווים מ-/pending)", parse_mode="")
+        return
+    short_id = parts[1].strip()
+    result = update_approval_status(short_id, "approved")
+    if not result:
+        send_message(chat_id, f"❌ לא נמצא pending עם ID `{short_id}`. שלח /pending לרשימה.", parse_mode="")
+        return
+    msg = (
+        f"✅ *סומן כמאושר:*\n\n"
+        f"*{result['title']}*\n\n"
+        f"📝 פעולה: {result.get('action','?')[:400]}\n\n"
+        f"⚠️ זה לא בוצע אוטומטית — דורש שינוי קוד/prompt.\n"
+        f"כדי ליישם: בשיחה הבאה עם Claude, שלח לו את הטקסט הזה ובקש לבצע.\n"
+        f"(ID נשמר ב-pending_approvals.json עם status=approved)"
+    )
+    send_message(chat_id, msg, parse_mode="")
+
+
+def cmd_reject(chat_id: int, text: str = ""):
+    """מסיר המלצה מרשימת ההמתנה. שימוש: /reject <8-char-id>"""
+    from auto_apply import update_approval_status
+    parts = text.split()
+    if len(parts) < 2:
+        send_message(chat_id, "❓ שימוש: `/reject <id>` (8 תווים מ-/pending)", parse_mode="")
+        return
+    short_id = parts[1].strip()
+    result = update_approval_status(short_id, "rejected")
+    if not result:
+        send_message(chat_id, f"❌ לא נמצא pending עם ID `{short_id}`.", parse_mode="")
+        return
+    send_message(chat_id, f"🗑 נדחה: *{result['title']}*", parse_mode="")
+
+
+def cmd_backtest(chat_id: int):
+    """מריץ Hold-out Backtest ידני על דאטה היסטורי שהמערכת לא ראתה."""
+    from holdout_backtest import run_holdout_backtest
+    send_message(
+        chat_id,
+        "🧪 *Hold-out Backtest מתחיל...*\n\n"
+        "מושך נרות מ-30-60 ימים אחורה (דאטה שהמערכת לא ראתה באימון),\n"
+        "מריץ 10 דגימות אקראיות עם הצוות המלא,\n"
+        "ובודק האם המערכת עדיין עובדת על דאטה חדש.\n\n"
+        "⏱ זמן צפוי: 5-10 דקות. אעדכן בסיום.",
+    )
+
+    def _run():
+        try:
+            result = run_holdout_backtest("BTCUSDT", n_samples=10)
+            if result.get("error"):
+                send_message(chat_id, f"❌ Backtest נכשל: {result['error']}")
+                return
+            send_message(chat_id, _format_holdout_telegram(result), parse_mode="")
+            _set_holdout_state(last_run_at=datetime.now().isoformat(), triggered_manually=True)
+        except Exception as e:
+            send_message(chat_id, f"❌ Backtest נכשל: {str(e)[:300]}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def cmd_regime(chat_id: int):
+    """מציג את מצב הרג'ים הנוכחי, או מריץ בדיקה אם אין state."""
+    from regime_detector import check_and_persist
+    send_message(chat_id, "🌪 *בודק משטר שוק...*\nמושך 30 ימי נרות ומחשב fingerprint.")
+
+    def _run():
+        try:
+            results = []
+            for symbol in SYMBOLS:
+                r = check_and_persist(symbol)
+                results.append((symbol, r))
+
+            for symbol, result in results:
+                if result.get("error"):
+                    send_message(chat_id, f"❌ {symbol}: {result['error']}")
+                    continue
+
+                changed = result.get("regime_changed")
+                emoji = "🚨" if changed else "✅"
+                status = "שינוי משטר!" if changed else "יציב"
+                msg = f"{emoji} *{symbol}: {status}*\n\n"
+                msg += f"📋 {result.get('explanation', '?')}\n\n"
+
+                shifts = result.get("shifts", {})
+                metric_he = {
+                    "atr_pct_mean": "תנודתיות (ATR%)",
+                    "rsi_mean": "RSI ממוצע",
+                    "trend_strength_pct": "כוח טרנד",
+                    "body_to_range": "אופי נרות",
+                }
+                msg += "*4 מטריקות (7d מול 30d):*\n"
+                for m, label in metric_he.items():
+                    if m in shifts:
+                        s = shifts[m]
+                        z = s.get("z_score", 0)
+                        marker = "🚨" if abs(z) >= 2 else ("⚠️" if abs(z) >= 1.5 else "•")
+                        msg += (
+                            f"{marker} {label}: {s.get('baseline_mean', '?')}→{s.get('current', '?')} "
+                            f"({z:+.2f}σ)\n"
+                        )
+                msg += f"\n_סף התראה: 2.0σ_"
+                send_message(chat_id, msg, parse_mode="")
+        except Exception as e:
+            send_message(chat_id, f"❌ /regime נכשל: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def cmd_decay(chat_id: int):
+    """מריץ דעיכת confidence ידנית - שימושי לבדיקה / להריץ מיד אחרי הגדרה."""
+    from memory_store import decay_stale_lesson_confidence
+    send_message(chat_id, "🍂 *מריץ דעיכת confidence...*\nבודק לקחים שלא הופעלו 30+ ימים.")
+
+    def _run():
+        try:
+            result = decay_stale_lesson_confidence(stale_days=30, decay_per_week=1, min_floor_confidence=0)
+            _set_decay_state(
+                last_run_at=datetime.now().isoformat(),
+                last_affected=result["affected_count"],
+                last_total_decay=result["total_decay"],
+                triggered_manually=True,
+            )
+            if result["affected_count"] == 0:
+                send_message(chat_id, "✅ כל הלקחים פעילים (אף אחד לא ב-30+ ימי חוסר פעילות). שום ירידה.")
+                return
+            top = sorted(result["decayed_lessons"], key=lambda x: x["old"] - x["new"], reverse=True)[:8]
+            msg = (
+                f"🍂 *סיום דעיכה ידנית*\n\n"
+                f"📊 {result['affected_count']} לקחים נדעכו\n"
+                f"📉 סך ירידת confidence: {result['total_decay']}\n\n"
+                f"*Top 8 ירידות:*\n"
+            )
+            for d in top:
+                msg += (
+                    f"• `{d['id']}` {d['old']}→{d['new']} "
+                    f"({d['days_idle']}d חוסר פעילות)\n"
+                    f"  _{d['rule'][:60]}..._\n"
+                )
+            send_message(chat_id, msg, parse_mode="")
+        except Exception as e:
+            send_message(chat_id, f"❌ דעיכה נכשלה: {e}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def cmd_help(chat_id: int):
     msg = """🤖 *Guy Trade - תפריט פקודות*
 
@@ -1621,6 +2059,12 @@ def cmd_help(chat_id: int):
 
 🧠 *למידה ושיפור:*
 /analyze — המכוון מנתח ומציע שיפורים
+/pending — רשימת המלצות שממתינות לאישור ידני
+/approve <id> — אשר המלצה ממתינה
+/reject <id> — דחה המלצה ממתינה
+/decay — דעיכת confidence ידנית על לקחים ישנים
+/regime — בדיקת שינוי משטר שוק
+/backtest — Hold-out backtest על דאטה היסטורי לא נראה
 /advance — עבור לשלב הבא (כשהקריטריונים מתקיימים)
 
 🌙 *למידת לילה (זמנים מתים):*
@@ -1669,6 +2113,10 @@ COMMANDS = {
     "/learnstart": cmd_learn_start,
     "/learn_stop": cmd_learn_stop,        # עוצר למידה ומחזיר auto-scan
     "/learnstop": cmd_learn_stop,
+    "/pending": cmd_pending,              # רשימת המלצות שממתינות לאישור ידני
+    "/decay": cmd_decay,                   # דעיכת confidence ידנית על לקחים ישנים
+    "/regime": cmd_regime,                 # בדיקת משטר שוק (z-score על 4 מטריקות)
+    "/backtest": cmd_backtest,             # Hold-out backtest על דאטה היסטורי לא נראה
     "/pause": cmd_pause,                  # מתג חירום - עוצר הכל
     "/pauseall": cmd_pause,
     "/pause_all": cmd_pause,
@@ -1706,6 +2154,15 @@ def handle_message(message: dict):
     cmd = text.split()[0].lower()
     if cmd == "/start":
         cmd_help(chat_id)
+    elif cmd in ("/approve", "/reject"):
+        # פקודות שצריכות ארגומנט (מקבלות את כל הטקסט)
+        try:
+            if cmd == "/approve":
+                cmd_approve(chat_id, text)
+            else:
+                cmd_reject(chat_id, text)
+        except Exception as e:
+            send_message(chat_id, f"❌ שגיאה בפקודה {cmd}: {e}")
     elif cmd in COMMANDS:
         try:
             COMMANDS[cmd](chat_id)
@@ -1771,6 +2228,21 @@ def main():
     shadow_thread = threading.Thread(target=_shadow_feedback_loop, daemon=True)
     shadow_thread.start()
     print(f"🧠 Shadow feedback פעיל - מפעיל מכוון כל {SHADOW_FEEDBACK_BATCH} דחיות.")
+
+    # 6. Lesson decay - דעיכת confidence על לקחים לא פעילים (פעם ב-24h)
+    decay_thread = threading.Thread(target=_lesson_decay_loop, daemon=True)
+    decay_thread.start()
+    print("🍂 Lesson decay פעיל - דעיכת confidence על לקחים לא פעילים (30+ ימים).")
+
+    # 7. Regime detector - זיהוי שינוי משטר שוק (פעם ב-6 שעות)
+    regime_thread = threading.Thread(target=_regime_detector_loop, daemon=True)
+    regime_thread.start()
+    print("🌪 Regime detector פעיל - בודק שינוי משטר כל 6 שעות.")
+
+    # 8. Hold-out backtest - בדיקת overfitting על דאטה היסטורי (פעם בחודש)
+    holdout_thread = threading.Thread(target=_holdout_backtest_loop, daemon=True)
+    holdout_thread.start()
+    print("🧪 Hold-out backtest פעיל - בודק overfitting פעם בחודש.")
 
     print("\nProgressing... Ctrl+C לעצירה.")
     print("=" * 60)

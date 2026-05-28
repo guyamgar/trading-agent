@@ -1,0 +1,56 @@
+{
+  "regime_changed": true,
+  "max_shift_metric": "atr_pct_mean",
+  "max_shift_z": 2.24,
+  "shifts": {
+    "atr_pct_mean": {
+      "z_score": 2.24,
+      "baseline_mean": 1.251,
+      "baseline_std": 0.047,
+      "current": 1.356
+    },
+    "rsi_mean": {
+      "z_score": -0.35,
+      "baseline_mean": 48.876,
+      "baseline_std": 8.368,
+      "current": 45.98
+    },
+    "trend_strength_pct": {
+      "z_score": -1.38,
+      "baseline_mean": -0.847,
+      "baseline_std": 1.913,
+      "current": -3.488
+    },
+    "body_to_range": {
+      "z_score": -1.24,
+      "baseline_mean": 0.418,
+      "baseline_std": 0.026,
+      "current": 0.385
+    }
+  },
+  "baseline_fingerprint": {
+    "atr_pct_mean": 1.282,
+    "rsi_mean": 47.5,
+    "trend_strength_pct": -5.929,
+    "body_to_range": 0.403
+  },
+  "recent_fingerprint": {
+    "atr_pct_mean": 1.356,
+    "rsi_mean": 45.98,
+    "trend_strength_pct": -3.488,
+    "body_to_range": 0.385
+  },
+  "explanation": "תנודתיות ↑ (+2.2σ: 1.25→1.36)",
+  "symbol": "ETHUSDT",
+  "computed_at": "2026-05-28T03:42:09.788901",
+  "is_new_alert": true,
+  "updated_at": "2026-05-28T03:42:09.790124",
+  "alerts_history": [
+    {
+      "at": "2026-05-28T03:42:09.788901",
+      "metric": "atr_pct_mean",
+      "z": 2.24,
+      "explanation": "תנודתיות ↑ (+2.2σ: 1.25→1.36)"
+    }
+  ]
+}
