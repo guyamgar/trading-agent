@@ -1,12 +1,12 @@
 {
-  "enabled": true,
+  "enabled": false,
   "started_at": "2026-05-26T13:08:46.143349",
-  "sessions_done": 161,
+  "sessions_done": 202,
   "sessions_failed": 22,
-  "wins": 117,
-  "losses": 44,
-  "stopped_at": "2026-05-26T12:01:21.836617",
-  "updated_at": "2026-05-28T05:27:27.785926",
+  "wins": 152,
+  "losses": 50,
+  "stopped_at": "2026-05-28T11:37:49.337181",
+  "updated_at": "2026-05-28T11:52:52.354275",
   "current_session_started": null,
   "current_session_num": null,
   "stopped_reason": "BUG: target_1=0 → -100% loss"

@@ -3,16 +3,17 @@
   "stage": 2,
   "stage_description": "פייפר טרייד עם נתוני לייב - להגיע ליעד חדש",
   "starting_balance": 1000.82,
-  "current_balance": 1368.46,
+  "current_balance": 1505.33,
   "target_balance": 2001.64,
-  "highest_balance": 1368.46,
+  "highest_balance": 1510.43,
   "lowest_balance": 495.97,
-  "trades_taken": 175,
-  "wins": 122,
-  "losses": 53,
+  "trades_taken": 219,
+  "wins": 158,
+  "losses": 61,
   "stage_started_at": "2026-05-24T15:27:33.365272",
   "milestones_hit": [
-    25
+    25,
+    50
   ],
   "stage_history": [
     {

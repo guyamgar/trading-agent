@@ -1,3 +1,40 @@
 {
-  "open": []
+  "open": [
+    {
+      "id": "f3db2828",
+      "symbol": "BTCUSDT",
+      "opened_at": "2026-05-28T09:16:45.028841",
+      "opened_at_price": 73288.79,
+      "opened_at_candle": "2026-05-28 09:00:00",
+      "direction": "LONG",
+      "entry": 73300.0,
+      "stop": 72700.0,
+      "target_1": 74170.0,
+      "target_2": 74480.0,
+      "setup_type": "Bounce",
+      "setup_score": 7.5,
+      "via_advocate": false,
+      "confidence": 6,
+      "reason": "אישור כניסה. כל תנאי הסף מולאו: (1) מנהל הסיכונים אישר ללא וטו — RR_net=1.72 כלפי T2, מעל סף 1.3. (2) קורא ההקשר לא הפעיל וטו קשיח — המליץ על limit order בדיוק לאזור 73,250–73,300, שהתמלאה כעת (מחיר נוכחי 73,288). כלל 34dd80f6 מולא במלואו. (3) החוקר ההיסטורי: 6/7 ניצחונות ב-setups דומים, WR_net=85.7",
+      "max_wait_minutes": 1440
+    },
+    {
+      "id": "a47f533c",
+      "symbol": "BTCUSDT",
+      "opened_at": "2026-05-28T10:11:54.601606",
+      "opened_at_price": 73502.53,
+      "opened_at_candle": "2026-05-28 10:00:00",
+      "direction": "LONG",
+      "entry": 73410.0,
+      "stop": 72813.0,
+      "target_1": 74650.0,
+      "target_2": 74775.0,
+      "setup_type": "Pullback",
+      "setup_score": 6,
+      "via_advocate": false,
+      "confidence": 5,
+      "reason": "מנהל הסיכונים אישר באופן מפורש — ללא וטו, RR_net=1.83 (מעל מינימום 1.3). קורא ההקשר אמר 'להמתין' בלבד — לא 'להימנע' — לפי הכללים זה אינו וטו. T1 נטו = 1.49% (1.69% גרוס − 0.2% עמלות) >> סף 0.4%. ספירת אורות אדומים: (1) volume_ratio 0.1 קריטי, (2) RSI 75.12 אוברבוט — רק שניים, לא הגענו לסף שלושה לדחי",
+      "max_wait_minutes": 1440
+    }
+  ]
 }

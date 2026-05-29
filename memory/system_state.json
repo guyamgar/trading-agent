@@ -1,15 +1,15 @@
 {
-  "scanner_status": "paused_for_training",
-  "scanner_started": "2026-05-26T12:07:10.127407",
-  "updated_at": "2026-05-28T05:29:09.591259",
-  "last_scan_at": "2026-05-26T12:14:50.113573",
-  "last_scan_result": "rejected",
-  "last_scan_price": 76692.99,
+  "scanner_status": "running",
+  "scanner_started": "2026-05-29T05:29:59.462400",
+  "updated_at": "2026-05-29T05:29:59.462777",
+  "last_scan_at": "2026-05-28T23:22:28.400741",
+  "last_scan_result": "new_recommendation",
+  "last_scan_price": 2013.39,
   "monitor_status": "idle",
-  "monitor_started": "2026-05-28T05:29:09.588432",
-  "last_monitor_at": "2026-05-28T05:29:09.590789",
+  "monitor_started": "2026-05-29T05:29:30.768087",
+  "last_monitor_at": "2026-05-29T05:29:31.408180",
   "last_monitor_closed": 0,
-  "open_recs_count": 0,
+  "open_recs_count": 2,
   "scanner_symbol": "BTCUSDT",
-  "last_scan_symbol": "BTCUSDT"
+  "last_scan_symbol": "ETHUSDT"
 }

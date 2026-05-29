@@ -725,5 +725,33 @@
     "reason": "נתונים תומכים חסרים לחלוטין: JSON הנתונים ריק {}. הדוגמאות היחידות (9fec1e60: 0.456, a11c64c9: 0.264) מוצגות כ'ייתכן Bounce LONG?' - זו שאלה, לא עובדה מוכחת. כדי לאשר צריך: (1) סטטיסטיקה קונקרטית משור",
     "rec_title": "Agent Pullback - התאם עדיפות Bounce LONG גבוהה יותר מ-Continuation SHORT check",
     "applied_at": "2026-05-28T02:14:35.798869"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "נתונים תומכים ריקים לחלוטין ({}). ההמלצה מבוססת על טענה בטקסט ('100% win rate 6/6') ללא סטטיסטיקה מדויקת להצגה. הקריטריון שלי קובע: 'אסור להחליט על בסיס תיאוריה - רק מספרים'. אין ממנו נתונים לאימות של",
+    "rec_title": "Pullback SHORT deep MACD < -50 (Lesson ac038996)",
+    "applied_at": "2026-05-28T06:01:30.948700"
+  },
+  {
+    "type": "LESSON_PROMOTE",
+    "judge_rejected": true,
+    "reason": "ההמלצה אינה עומדת בקריטריוני האישור: (1) מדגם קטן מדי - n=12 בלבד אינו מספיק לסיכום מהימן על ביצועים עקביים; (2) דוגמה תומכת אחת בלבד (9 wins vs 3 losses) - נדרשות לפחות 3 דוגמאות נפרדות; (3) שדה 'נתו",
+    "rec_title": "Bounce LONG RSI > 70 veto (Lesson c0d8e549)",
+    "applied_at": "2026-05-28T06:01:55.784499"
+  },
+  {
+    "type": "AGENT_REFINE",
+    "judge_rejected": true,
+    "reason": "לא סופקו נתונים לבדיקה. בשדה 'נתונים תומכים' התקבל JSON ריק {}. ההמלצה מדברת על סטטיסטיקה - 'e0e1c4db (65 invoked, 75% success)', 'f3cc8073 (79 invoked, 72% success)', '73% average success' - אך אין ל",
+    "rec_title": "Strengthen Continuation SHORT veto enforcement",
+    "applied_at": "2026-05-28T06:02:20.031158"
+  },
+  {
+    "type": "PARAMETER_TUNE",
+    "judge_rejected": true,
+    "reason": "סתירה משמעותית בנתונים: ההמלצה מתבססת על win rate של 71% (171/241) אך הנתונים המסופקים מראים 90% win rate (18/20). נימוק ההמלצה (29% failure rate) לא תואם לנתונים הממשיים שמציגים רק 10% failure rate. ",
+    "rec_title": "MIN_HUNTER_QUALITY: 5 → 6 (slight tightening)",
+    "applied_at": "2026-05-28T06:02:43.005452"
   }
 ]
