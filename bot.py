@@ -1932,6 +1932,53 @@ def cmd_reject(chat_id: int, text: str = ""):
     send_message(chat_id, f"🗑 נדחה: *{result['title']}*", parse_mode="")
 
 
+def cmd_strategies(chat_id: int):
+    """מציג את הביצועים של כל אסטרטגיה — היסטוריה + הפעלות חדשות מאז ההטמעה."""
+    from strategies import STRATEGY_LIBRARY, get_strategy_stats
+    from datetime import datetime as _dt
+
+    live_stats = get_strategy_stats()
+    msg = "📊 *Strategy Library — ביצועים*\n\n"
+
+    # ספירה לפי תוקף: blessed + experimental + anti
+    blessed = [s for s in STRATEGY_LIBRARY if s.kind == "blessed"]
+    anti = [s for s in STRATEGY_LIBRARY if s.kind == "anti"]
+
+    msg += f"*✅ אסטרטגיות מבורכות ({len(blessed)}):*\n\n"
+    now_h = _dt.utcnow().hour
+    for s in blessed:
+        active = "🟢 פעיל" if s.is_active_at(_dt.utcnow()) else "⚪️ לא פעיל"
+        msg += f"━━━ *{s.name}* ━━━\n"
+        msg += f"{active} | שעות UTC: {s.start_hour_utc}-{s.end_hour_utc}\n"
+        msg += f"🎯 setup: {s.allowed_setups[0]} {s.allowed_directions[0]}\n"
+        msg += f"💪 size mult: {s.position_size_mult}x\n"
+        msg += f"📜 היסטורי: {s.historical_trades} עסקאות, WR {s.historical_wr}%, avg {s.historical_avg_pnl:+.2f}%\n"
+
+        # סטטיסטיקה חיה - אחרי הטמעת המערכת
+        live = live_stats.get(s.name, {})
+        if live.get("trades", 0) > 0:
+            wins = live.get("wins", 0)
+            trades = live.get("trades", 1)
+            wr = wins / trades * 100
+            total = live.get("total_pnl", 0)
+            avg = total / trades
+            msg += f"🆕 מאז הטמעה: {trades} עסקאות, WR {wr:.0f}%, avg {avg:+.2f}%, סה\"כ {total:+.2f}%\n"
+        msg += "\n"
+
+    msg += f"*🚫 אסטרטגיות-אנטי (חסומות): {len(anti)}*\n"
+    for s in anti:
+        msg += f"• {s.name}: היסטורית {s.historical_wr}% WR, חסום אוטומטית\n"
+
+    exp = live_stats.get("_experimental_", {})
+    if exp.get("trades", 0) > 0:
+        msg += f"\n*⚠️ עסקאות ניסיוניות (חוץ ל-strategies):*\n"
+        wr = exp.get("wins", 0) / exp.get("trades", 1) * 100
+        msg += f"{exp.get('trades')} עסקאות, WR {wr:.0f}%, סה\"כ {exp.get('total_pnl', 0):+.2f}%\n"
+
+    msg += f"\n_עכשיו {now_h}:00 UTC — בודק אילו אסטרטגיות פעילות עכשיו._"
+    send_message(chat_id, msg, parse_mode="")
+
+
 def cmd_backtest(chat_id: int):
     """מריץ Hold-out Backtest ידני על דאטה היסטורי שהמערכת לא ראתה."""
     from holdout_backtest import run_holdout_backtest
@@ -2065,6 +2112,7 @@ def cmd_help(chat_id: int):
 /decay — דעיכת confidence ידנית על לקחים ישנים
 /regime — בדיקת שינוי משטר שוק
 /backtest — Hold-out backtest על דאטה היסטורי לא נראה
+/strategies — ביצועי 4 האסטרטגיות המבורכות (London Bouncer, NY Pullback וכו')
 /advance — עבור לשלב הבא (כשהקריטריונים מתקיימים)
 
 🌙 *למידת לילה (זמנים מתים):*
@@ -2117,6 +2165,7 @@ COMMANDS = {
     "/decay": cmd_decay,                   # דעיכת confidence ידנית על לקחים ישנים
     "/regime": cmd_regime,                 # בדיקת משטר שוק (z-score על 4 מטריקות)
     "/backtest": cmd_backtest,             # Hold-out backtest על דאטה היסטורי לא נראה
+    "/strategies": cmd_strategies,         # ביצועי 4 האסטרטגיות המבורכות
     "/pause": cmd_pause,                  # מתג חירום - עוצר הכל
     "/pauseall": cmd_pause,
     "/pause_all": cmd_pause,

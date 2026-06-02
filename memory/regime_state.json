@@ -1,50 +1,50 @@
 {
-  "regime_changed": true,
-  "max_shift_metric": "atr_pct_mean",
-  "max_shift_z": 3.7,
+  "regime_changed": false,
+  "max_shift_metric": "trend_strength_pct",
+  "max_shift_z": -0.89,
   "shifts": {
     "atr_pct_mean": {
-      "z_score": 3.7,
-      "baseline_mean": 1.252,
-      "baseline_std": 0.046,
-      "current": 1.422
+      "z_score": 0.83,
+      "baseline_mean": 1.268,
+      "baseline_std": 0.058,
+      "current": 1.316
     },
     "rsi_mean": {
-      "z_score": -0.77,
-      "baseline_mean": 48.267,
-      "baseline_std": 8.174,
-      "current": 41.99
+      "z_score": -0.63,
+      "baseline_mean": 46.487,
+      "baseline_std": 8.989,
+      "current": 40.82
     },
     "trend_strength_pct": {
-      "z_score": -1.42,
-      "baseline_mean": -1.125,
-      "baseline_std": 2.08,
-      "current": -4.084
+      "z_score": -0.89,
+      "baseline_mean": -1.892,
+      "baseline_std": 2.686,
+      "current": -4.283
     },
     "body_to_range": {
-      "z_score": -0.45,
-      "baseline_mean": 0.415,
-      "baseline_std": 0.037,
-      "current": 0.398
+      "z_score": -0.82,
+      "baseline_mean": 0.394,
+      "baseline_std": 0.028,
+      "current": 0.371
     }
   },
   "baseline_fingerprint": {
-    "atr_pct_mean": 1.265,
-    "rsi_mean": 47.12,
-    "trend_strength_pct": -6.686,
-    "body_to_range": 0.402
+    "atr_pct_mean": 1.282,
+    "rsi_mean": 47.24,
+    "trend_strength_pct": -8.464,
+    "body_to_range": 0.399
   },
   "recent_fingerprint": {
-    "atr_pct_mean": 1.422,
-    "rsi_mean": 41.99,
-    "trend_strength_pct": -4.084,
-    "body_to_range": 0.398
+    "atr_pct_mean": 1.316,
+    "rsi_mean": 40.82,
+    "trend_strength_pct": -4.283,
+    "body_to_range": 0.371
   },
-  "explanation": "תנודתיות ↑ (+3.7σ: 1.25→1.42)",
+  "explanation": "השוק יציב",
   "symbol": "ETHUSDT",
-  "computed_at": "2026-05-29T03:40:14.380723",
-  "is_new_alert": true,
-  "updated_at": "2026-05-29T03:40:14.381460",
+  "computed_at": "2026-06-02T04:51:43.367845",
+  "is_new_alert": false,
+  "updated_at": "2026-06-02T04:51:43.368396",
   "alerts_history": [
     {
       "at": "2026-05-28T03:42:09.788901",

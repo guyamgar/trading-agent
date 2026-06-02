@@ -105,9 +105,26 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
         except Exception:
             account_balance_usd = 1000.0
 
+    # זיהוי אסטרטגיה מבוססת-זמן+setup. ככה הוועדה מקבלת context על מה
+    # שהדאטה ההיסטורי שלנו מראה שעובד/לא עובד בשעה ובסוג הזה.
+    strategy_context = None
+    if setup:
+        try:
+            from strategies import classify_trade_intent
+            from datetime import datetime as _dt
+            strategy_context = classify_trade_intent(
+                _dt.utcnow(),
+                setup.get("סוג", "?"),
+                setup.get("כיוון", "?"),
+            )
+        except Exception as e:
+            print(f"⚠️ strategy classification failed: {e}")
+
     extra: Optional[Dict] = {}
     if setup:
         extra["setup_from_hunter"] = setup
+    if strategy_context:
+        extra["strategy_context"] = strategy_context
     if lessons:
         extra["lessons_from_past_trades"] = lessons
     extra["account_balance_usd"] = account_balance_usd
@@ -158,6 +175,47 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
     }
     if lessons:
         head_input["lessons_from_past_trades"] = lessons
+    if strategy_context:
+        head_input["strategy_context"] = strategy_context
+
+    # קיצור דרך לאסטרטגיות-אנטי: דוחים ללא קריאת LLM (חוסך כסף ומאיץ)
+    if strategy_context and strategy_context.get("kind") == "anti":
+        if verbose:
+            print(f"  🚫 ANTI-STRATEGY veto: {strategy_context.get('strategy_name')}")
+        # מחזירים תשובת "אין כניסה" מובנית - כמו אם LLM החזיר את זה
+        class _FakeResponse:
+            parsed = {
+                "החלטה": "אין כניסה",
+                "סיבה_להחלטה": f"ANTI-STRATEGY: {strategy_context.get('strategy_name')}. {strategy_context.get('context_for_committee')}",
+                "כניסה": 0, "סטופ": 0, "יעד_1": 0, "יעד_2": 0,
+                "גודל_פוזיציה_USD": 0, "ביטחון_1_10": 0,
+                "_anti_strategy_rejected": True,
+            }
+            raw_result = "{}"
+            is_error = False
+            error_message = None
+            elapsed_sec = 0.0
+            cost_usd = 0.0
+        head_response = _FakeResponse()
+        head_elapsed = 0.0
+        total_cost = sum(r["cost_usd"] for r in advisor_results.values())
+        total_elapsed = advisor_elapsed
+        return {
+            "timestamp": market_summary.get("timestamp"),
+            "market_summary": market_summary,
+            "setup": setup,
+            "advisors": advisor_results,
+            "strategy_context": strategy_context,
+            "head_decision": {
+                "parsed": head_response.parsed,
+                "raw": head_response.raw_result,
+                "is_error": False,
+                "error": None,
+                "elapsed_sec": 0.0,
+                "cost_usd": 0.0,
+            },
+            "totals": {"elapsed_sec": round(total_elapsed, 1), "cost_usd": round(total_cost, 4)},
+        }
 
     training_hint = ""
     if training_mode:
@@ -176,12 +234,39 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
 
 המטרה: יותר עסקאות שילמדו אותנו, לא יותר עסקאות שיפסידו לנו כסף."""
 
+    strategy_hint = ""
+    if strategy_context:
+        sn = strategy_context.get("strategy_name")
+        kind = strategy_context.get("kind")
+        ctx = strategy_context.get("context_for_committee", "")
+        mult = strategy_context.get("size_mult", 1.0)
+        if kind == "blessed":
+            strategy_hint = f"""
+
+📊 **אסטרטגיה פעילה (מבוססת על דאטה היסטורי):**
+{ctx}
+
+המשמעות:
+- אם אתה מאשר: הציין במפורש "ALIGN_STRATEGY: {sn}" בסיבה_להחלטה
+- גודל_פוזיציה_USD יוכפל ב-{mult:.2f} (האסטרטגיה הוכחה רווחית)
+- אם אתה דוחה למרות שזה אסטרטגיה מבורכת — תן סיבה חזקה (וטו fees, רעש מובהק)"""
+        elif kind == "experimental":
+            strategy_hint = f"""
+
+⚠️ **Setup ניסיוני (לא תואם לאסטרטגיה מבורכת):**
+{ctx}
+
+המשמעות:
+- אתה רשאי לאשר רק אם המתמטיקה מעולה (RR_net ≥ 1.8, T1 גרוס ≥ 0.5%)
+- גודל_פוזיציה_USD יוכפל ב-{mult:.2f} (חצי גודל) — מסתכנים פחות בלא-מוכר
+- אם אתה דוחה — זה גם תקין; המידע המצטבר חשוב בעצמו"""
+
     head_user_msg = f"""שמעת את שלושת המומחים. הנה הסיכום:
 ```json
 {json.dumps(head_input, indent=2, ensure_ascii=False)}
 ```
 
-קבל החלטה והחזר JSON לפי הפורמט שלך.{training_hint}"""
+קבל החלטה והחזר JSON לפי הפורמט שלך.{strategy_hint}{training_hint}"""
 
     head_start = time.time()
     head_response = call_claude(head_user_msg, prompts.HEAD_TRADER, model="sonnet")
@@ -256,6 +341,19 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
                     "_validator_reason": invalid_reason,
                 }
 
+    # החלת position size mult של האסטרטגיה (אם יש) על ההחלטה הסופית.
+    # ככה NY Pullback Trader יפתח פוזיציה ב-130% מהגודל הרגיל, ניסיוני ב-50%.
+    if (head_response.parsed and not head_response.is_error and
+            strategy_context and head_response.parsed.get("החלטה") in ("LONG", "SHORT")):
+        mult = strategy_context.get("size_mult", 1.0)
+        orig_size = head_response.parsed.get("גודל_פוזיציה_USD") or 0
+        if orig_size > 0 and mult != 1.0:
+            head_response.parsed["גודל_פוזיציה_USD"] = round(orig_size * mult, 2)
+            head_response.parsed["_size_mult_applied"] = mult
+        # תיוג האסטרטגיה על העסקה כדי שנוכל לעקוב סטטיסטיקה
+        head_response.parsed["_strategy_name"] = strategy_context.get("strategy_name")
+        head_response.parsed["_strategy_kind"] = strategy_context.get("kind")
+
     if verbose:
         status = "✗" if head_response.is_error else "✓"
         print(f"  {status} ראש הצוות: {head_elapsed:.1f}s, ${head_response.cost_usd:.4f}")
@@ -268,6 +366,7 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
         "market_summary": market_summary,
         "setup": setup,
         "advisors": advisor_results,
+        "strategy_context": strategy_context,
         "head_decision": {
             "parsed": head_response.parsed,
             "raw": head_response.raw_result,

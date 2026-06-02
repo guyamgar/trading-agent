@@ -168,6 +168,9 @@ def check_live_market(verbose: bool = True, symbol: str = None) -> dict:
         "confidence": decision.get("ביטחון_1_10"),
         "reason": decision.get("סיבה_להחלטה", "")[:300],
         "max_wait_minutes": 24 * 60,  # מקסימום יום
+        "strategy_name": decision.get("_strategy_name"),
+        "strategy_kind": decision.get("_strategy_kind"),
+        "size_mult_applied": decision.get("_size_mult_applied", 1.0),
     }
 
     open_recs = load_open_recs()

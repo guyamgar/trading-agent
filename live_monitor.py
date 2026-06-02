@@ -157,6 +157,14 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
 
     save_trade(trade_obj)
 
+    # עדכון סטטיסטיקות אסטרטגיה - אם הרשומה תויגה עם strategy_name
+    try:
+        from strategies import record_trade_outcome
+        strat_name = rec.get("strategy_name") or rec.get("_strategy_name")
+        record_trade_outcome(strat_name, sim["pnl_pct"])
+    except Exception as e:
+        print(f"⚠️ strategy stats update failed: {e}")
+
     # עדכון חשבון
     acc_update = update_account_after_trade(sim["pnl_pct"], sim["pnl_pct"] > 0)
 
