@@ -28,7 +28,7 @@ def main():
         if not direction or entry <= 0:
             continue
         sym = "BTCUSDT" if entry > 10000 else "ETHUSDT"
-        end = ms_epoch(t["timestamp_analyzed"]) + 15 * 60 * 1000  # include decision candle
+        end = ms_epoch(t["timestamp_analyzed"])  # endTime inclusive on open_time → window ends AT the decision candle
         df = client.get_klines(sym, "15m", limit=250, end_time=end)
         time.sleep(0.08)
         if len(df) < 50:
