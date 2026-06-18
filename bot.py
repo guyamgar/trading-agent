@@ -1487,6 +1487,9 @@ def _reality_check_loop():
     import reality_check
     time.sleep(90)  # let the scanner settle first
     while True:
+        if is_paused():
+            time.sleep(6 * 60 * 60)
+            continue
         try:
             summary = reality_check.run_reality_check()
             if summary["dangerous"] or summary["lessons_decayed"]:

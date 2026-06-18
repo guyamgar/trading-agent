@@ -113,7 +113,7 @@ def run_reality_check() -> Dict:
     state = update_live_mults(dangerous, all_names, state)
     state.setdefault("history", []).append({
         "at": datetime.now().isoformat(), "dangerous": dangerous,
-        "mults": {n: state["live_size_mult"][n] for n in (dangerous or all_names)},
+        "mults": {n: state["live_size_mult"][n] for n in all_names},
     })
     state["history"] = state["history"][-50:]
     _save_state(state)
