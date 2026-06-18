@@ -121,12 +121,12 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
             print(f"⚠️ strategy classification failed: {e}")
 
     # ─── Regime gate: veto entries that fight a confirmed trend (pre-LLM, backtest-safe) ───
-    from config import REGIME_GATE_ENABLED, REGIME_LONG_VETO_REQUIRES_EMA_CROSS
+    from config import REGIME_GATE_ENABLED, REGIME_GATE_SIGNAL
     if REGIME_GATE_ENABLED and setup:
         from regime_gate import regime_gate_veto
         _regime_veto = regime_gate_veto(
             setup.get("כיוון", ""), market_summary,
-            require_ema_cross=REGIME_LONG_VETO_REQUIRES_EMA_CROSS,
+            signal=REGIME_GATE_SIGNAL,
         )
         if _regime_veto:
             if verbose:

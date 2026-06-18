@@ -43,7 +43,8 @@ FAST_MODE = False  # יופעל אוטומטית כשaccount.stage >= 2
 # took 17 LONGs into a -9.58% downtrend. The gate vetoes LONG in confirmed
 # downtrends / SHORT in confirmed uptrends, using only decision-time data.
 REGIME_GATE_ENABLED = True
-REGIME_LONG_VETO_REQUIRES_EMA_CROSS = True  # require EMA50/EMA200 to confirm the trend
+REGIME_LONG_VETO_REQUIRES_EMA_CROSS = True  # back-compat only; superseded by REGIME_GATE_SIGNAL
+REGIME_GATE_SIGNAL = "ema_cross"  # "ema_cross" (default, R1) | "trend_and_cross" (old R0)
 
 # ─── טעינת overrides דינמיים שהמכוון/אוטו-apply שינו ───
 def _load_overrides():
