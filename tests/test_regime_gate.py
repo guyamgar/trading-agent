@@ -27,6 +27,24 @@ def test_short_allowed_in_downtrend():
 def test_empty_direction_is_safe():
     assert regime_gate_veto("", _ms("יורד", 100.0, 110.0)) is None
 
+def test_long_veto_without_ema_cross_check_message_accurate():
+    # When require_ema_cross=False, veto on trend alone.
+    # EMA50=110 > EMA200=100 (uptrend), but trend says downtrend.
+    # Message should reflect actual relationship (>=, not <) or omit EMA clause.
+    msg = regime_gate_veto("LONG", _ms("יורד", 110.0, 100.0), require_ema_cross=False)
+    assert msg is not None, "Should veto on trend=יורד alone"
+    assert "< EMA200" not in msg, f"Message should not claim EMA50 < EMA200: {msg}"
+    assert ">=" in msg or "EMA50=" not in msg, f"Should show >= or omit EMA clause: {msg}"
+
+def test_short_veto_without_ema_cross_check_message_accurate():
+    # When require_ema_cross=False, veto on trend alone.
+    # EMA50=100 < EMA200=110 (downtrend), but trend says uptrend.
+    # Message should reflect actual relationship (<=, not >) or omit EMA clause.
+    msg = regime_gate_veto("SHORT", _ms("עולה", 100.0, 110.0), require_ema_cross=False)
+    assert msg is not None, "Should veto on trend=עולה alone"
+    assert "> EMA200" not in msg, f"Message should not claim EMA50 > EMA200: {msg}"
+    assert "<=" in msg or "EMA50=" not in msg, f"Should show <= or omit EMA clause: {msg}"
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

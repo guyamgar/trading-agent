@@ -27,10 +27,18 @@ def regime_gate_veto(direction: str, market_summary: dict,
 
     if d == "LONG" and trend == "יורד":
         if (not require_ema_cross) or (have_emas and ema50 < ema200):
-            return (f"REGIME GATE: LONG חסום בירידה מאוששת "
-                    f"(trend=יורד, EMA50={ema50} < EMA200={ema200})")
+            if have_emas:
+                op = "<" if ema50 < ema200 else ">=" if ema50 >= ema200 else "?"
+                ema_clause = f", EMA50={ema50} {op} EMA200={ema200}"
+            else:
+                ema_clause = ""
+            return (f"REGIME GATE: LONG חסום בירידה מאוששת (trend=יורד{ema_clause})")
     if d == "SHORT" and trend == "עולה":
         if (not require_ema_cross) or (have_emas and ema50 > ema200):
-            return (f"REGIME GATE: SHORT חסום בעלייה מאוששת "
-                    f"(trend=עולה, EMA50={ema50} > EMA200={ema200})")
+            if have_emas:
+                op = ">" if ema50 > ema200 else "<=" if ema50 <= ema200 else "?"
+                ema_clause = f", EMA50={ema50} {op} EMA200={ema200}"
+            else:
+                ema_clause = ""
+            return (f"REGIME GATE: SHORT חסום בעלייה מאוששת (trend=עולה{ema_clause})")
     return None
