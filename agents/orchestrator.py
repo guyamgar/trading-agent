@@ -116,6 +116,7 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
                 _dt.utcnow(),
                 setup.get("סוג", "?"),
                 setup.get("כיוון", "?"),
+                market_summary,
             )
         except Exception as e:
             print(f"⚠️ strategy classification failed: {e}")
