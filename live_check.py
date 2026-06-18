@@ -15,6 +15,7 @@ from data.binance_client import BinanceClient
 from data.indicators import market_summary, candle_window
 from agents.orchestrator import run_hunter, run_committee, run_devil_advocate
 from memory_store import relevant_lessons, load_trades
+from strategies import classify_regime
 from config import SYMBOL, TIMEFRAME_ANALYSIS
 
 OPEN_RECS_FILE = ROOT / "memory" / "open_recommendations.json"
@@ -171,6 +172,7 @@ def check_live_market(verbose: bool = True, symbol: str = None) -> dict:
         "strategy_name": decision.get("_strategy_name"),
         "strategy_kind": decision.get("_strategy_kind"),
         "size_mult_applied": decision.get("_size_mult_applied", 1.0),
+        "regime": classify_regime(summary),
     }
 
     open_recs = load_open_recs()

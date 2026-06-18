@@ -148,6 +148,7 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
     }
 
     # שמירת לקח
+    _regime = rec.get("regime", "unknown")
     new_lesson = (coach or {}).get("לקח_חדש")
     if new_lesson and new_lesson not in (None, "null", "אין לקח חדש"):
         save_lesson({
@@ -156,6 +157,7 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
             "category": (coach or {}).get("סיווג"),
             "from_outcome": sim["outcome"],
             "live_mode": True,
+            "regime": _regime,
         })
 
     save_trade(trade_obj)
@@ -164,7 +166,7 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
     try:
         from strategies import record_trade_outcome
         strat_name = rec.get("strategy_name") or rec.get("_strategy_name")
-        record_trade_outcome(strat_name, sim["pnl_pct"])
+        record_trade_outcome(strat_name, sim["pnl_pct"], regime=_regime)
     except Exception as e:
         print(f"⚠️ strategy stats update failed: {e}")
 
