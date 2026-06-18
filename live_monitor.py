@@ -51,6 +51,13 @@ def check_rec_status(rec: dict, current_price: float, candle_high: float, candle
     if t2:
         t2_hit = (candle_high >= t2) if is_long else (candle_low <= t2)
 
+    # זמן החזקה - מחושב לכל תוצאה (תיקון באג: בעבר חושב רק ב-timeout) ──
+    opened = datetime.fromisoformat(
+        rec["opened_at"].replace("Z", "+00:00") if rec["opened_at"].endswith("Z") else rec["opened_at"])
+    if opened.tzinfo is None:
+        opened = opened.replace(tzinfo=timezone.utc)
+    elapsed_min = (datetime.now(timezone.utc) - opened).total_seconds() / 60
+
     # שמרני - אם גם stop וגם target באותו נר → stop
     if stop_hit:
         exit_price = stop
@@ -63,11 +70,6 @@ def check_rec_status(rec: dict, current_price: float, candle_high: float, candle
         outcome = "target_1"
     else:
         # check timeout
-        opened = datetime.fromisoformat(rec["opened_at"].replace("Z", "+00:00") if rec["opened_at"].endswith("Z") else rec["opened_at"])
-        if opened.tzinfo is None:
-            opened = opened.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        elapsed_min = (now - opened).total_seconds() / 60
         if elapsed_min >= rec.get("max_wait_minutes", 24 * 60):
             exit_price = current_price
             outcome = "timeout"
@@ -87,6 +89,7 @@ def check_rec_status(rec: dict, current_price: float, candle_high: float, candle
         "exit_price": exit_price,
         "gross_pnl_pct": round(gross_pnl_pct, 3),
         "pnl_pct": round(net_pnl_pct, 3),
+        "minutes_held": round(elapsed_min, 1),
     }
 
 
