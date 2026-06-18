@@ -120,6 +120,37 @@ def run_committee(market_summary: dict, setup: Optional[dict] = None,
         except Exception as e:
             print(f"⚠️ strategy classification failed: {e}")
 
+    # ─── Regime gate: veto entries that fight a confirmed trend (pre-LLM, backtest-safe) ───
+    from config import REGIME_GATE_ENABLED, REGIME_LONG_VETO_REQUIRES_EMA_CROSS
+    if REGIME_GATE_ENABLED and setup:
+        from regime_gate import regime_gate_veto
+        _regime_veto = regime_gate_veto(
+            setup.get("כיוון", ""), market_summary,
+            require_ema_cross=REGIME_LONG_VETO_REQUIRES_EMA_CROSS,
+        )
+        if _regime_veto:
+            if verbose:
+                print(f"  🚫 REGIME GATE veto: {_regime_veto}")
+            return {
+                "timestamp": market_summary.get("timestamp"),
+                "market_summary": market_summary,
+                "setup": setup,
+                "advisors": {},
+                "strategy_context": strategy_context,
+                "head_decision": {
+                    "parsed": {
+                        "החלטה": "אין כניסה",
+                        "סיבה_להחלטה": _regime_veto,
+                        "כניסה": 0, "סטופ": 0, "יעד_1": 0, "יעד_2": 0,
+                        "גודל_פוזיציה_USD": 0, "ביטחון_1_10": 0,
+                        "_regime_rejected": True,
+                    },
+                    "raw": "{}", "is_error": False, "error": None,
+                    "elapsed_sec": 0.0, "cost_usd": 0.0,
+                },
+                "totals": {"elapsed_sec": 0.0, "cost_usd": 0.0},
+            }
+
     extra: Optional[Dict] = {}
     if setup:
         extra["setup_from_hunter"] = setup

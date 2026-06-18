@@ -38,6 +38,12 @@ CANDLES_FOR_ANALYSIS = 250
 # הוועדה המלאה רצה אחרי בדיעבד ולומדת. ככה לא בורחות הזדמנויות.
 FAST_MODE = False  # יופעל אוטומטית כשaccount.stage >= 2
 
+# ─── Regime gate (2026-06-18): block entries that fight a confirmed trend ───
+# Diagnosis: live WR collapsed to 19% because the long-biased strategy set
+# took 17 LONGs into a -9.58% downtrend. The gate vetoes LONG in confirmed
+# downtrends / SHORT in confirmed uptrends, using only decision-time data.
+REGIME_GATE_ENABLED = True
+REGIME_LONG_VETO_REQUIRES_EMA_CROSS = True  # require EMA50/EMA200 to confirm the trend
 
 # ─── טעינת overrides דינמיים שהמכוון/אוטו-apply שינו ───
 def _load_overrides():
