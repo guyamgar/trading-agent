@@ -354,7 +354,7 @@ def _save_stats(stats: Dict):
     STRATEGIES_STATS_FILE.write_text(json.dumps(stats, ensure_ascii=False, indent=2))
 
 
-def record_trade_outcome(strategy_name: Optional[str], pnl_pct: float):
+def record_trade_outcome(strategy_name: Optional[str], pnl_pct: float, regime: Optional[str] = None):
     """נקרא אחרי שעסקה נסגרת. מעדכן statistics לאסטרטגיה (או 'experimental')."""
     key = strategy_name or "_experimental_"
     stats = _load_stats()
@@ -375,6 +375,15 @@ def record_trade_outcome(strategy_name: Optional[str], pnl_pct: float):
     if not s["first_trade_at"]:
         s["first_trade_at"] = now
     s["last_trade_at"] = now
+    if regime:
+        br = s.setdefault("by_regime", {})
+        r = br.setdefault(regime, {"trades": 0, "wins": 0, "losses": 0, "total_pnl": 0.0})
+        r["trades"] += 1
+        if pnl_pct > 0:
+            r["wins"] += 1
+        else:
+            r["losses"] += 1
+        r["total_pnl"] += pnl_pct
     stats[key] = s
     _save_stats(stats)
 
