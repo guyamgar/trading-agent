@@ -234,6 +234,20 @@ def _is_confirmed_downtrend(market_summary: Optional[Dict]) -> bool:
     return e50 is not None and e200 is not None and e50 < e200
 
 
+def classify_regime(market_summary: Optional[Dict]) -> str:
+    """Deterministic regime label from EMA structure. bull/bear/range.
+    Consistent with the regime gate (bear requires EMA50<EMA200)."""
+    ind = (market_summary or {}).get("indicators") or {}
+    e9, e21, e50, e200 = ind.get("ema_9"), ind.get("ema_21"), ind.get("ema_50"), ind.get("ema_200")
+    if None in (e9, e21, e50, e200):
+        return "range"
+    if e9 > e21 > e50 and e50 > e200:
+        return "bull"
+    if e9 < e21 < e50 and e50 < e200:
+        return "bear"
+    return "range"
+
+
 def find_matching_strategy(timestamp_utc: datetime, setup_type: str, direction: str,
                            market_summary: Optional[Dict] = None) -> Optional[Strategy]:
     """
