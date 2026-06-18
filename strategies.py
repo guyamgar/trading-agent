@@ -294,8 +294,13 @@ def classify_trade_intent(timestamp_utc: datetime, setup_type: str, direction: s
             ),
         }
 
-    # blessed
-    base_mult = s.position_size_mult
+    # blessed — scale by the Reality-Check live-confidence multiplier (default 1.0)
+    try:
+        from reality_check import get_live_size_mult
+        _live_mult = get_live_size_mult(s.name)
+    except Exception:
+        _live_mult = 1.0
+    base_mult = s.position_size_mult * _live_mult
     hist_str = (
         f"WR היסטורית {s.historical_wr}% על {s.historical_trades} עסקאות. "
         if s.historical_trades and s.historical_wr
