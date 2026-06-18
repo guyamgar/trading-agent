@@ -123,8 +123,15 @@ def _eval_sample(df: pd.DataFrame, idx: int, lessons: List[Dict]) -> Dict:
             "reason": (decision.get("סיבה_להחלטה") or "")[:200],
         }
 
-    # מסמלץ קדימה
-    sim = simulate_trade(decision, df_future)
+    # מסמלץ קדימה — קריאה תואמת-חתימה (תוקן באג: היו ארגומנטים פוזיציוניים שגויים)
+    sim = simulate_trade(
+        candles_after=df_future,
+        direction=decision.get("החלטה"),
+        entry_price=float(decision.get("כניסה") or 0),
+        stop=float(decision.get("סטופ") or 0),
+        target_1=float(decision.get("יעד_1") or 0),
+        target_2=float(decision.get("יעד_2") or 0) or None,
+    )
     return {
         "status": "executed",
         "idx": idx,
