@@ -144,6 +144,17 @@ def save_lesson(lesson: Dict) -> str:
     lesson["times_wrong"] = lesson.get("times_wrong", 0)
     lesson["overrides_attempted"] = lesson.get("overrides_attempted", 0)
     lesson["overrides_successful"] = lesson.get("overrides_successful", 0)
+    # ─── regime tag (regime-conditioned learning) ───
+    ms = lesson.pop("market_summary", None)
+    if "regime" not in lesson:
+        if ms is not None:
+            try:
+                from strategies import classify_regime
+                lesson["regime"] = classify_regime(ms)
+            except Exception:
+                lesson["regime"] = "unknown"
+        else:
+            lesson["regime"] = "unknown"
     lessons.append(lesson)
 
     LESSONS_FILE.write_text(json.dumps({"lessons": lessons}, ensure_ascii=False, indent=2))
@@ -204,13 +215,22 @@ def update_lesson_stats(lesson_id: str, *, invoked: bool = False,
 
 
 def relevant_lessons(market_summary: Dict, limit: int = 10, min_confidence: int = 0) -> List[Dict]:
-    """
-    מחזיר לקחים. כברירת מחדל - ה-N האחרונים. אפשר לסנן לפי confidence מינימלי.
-    """
+    """לקחים מתועדפים לפי רג'יים: תואמי-רג'יים קודם, מילוי באחרונים."""
     lessons = load_lessons()
     if min_confidence > 0:
         lessons = [l for l in lessons if l.get("confidence", 1) >= min_confidence]
-    return lessons[-limit:]
+    try:
+        from strategies import classify_regime
+        cur = classify_regime(market_summary)
+    except Exception:
+        cur = None
+    if not cur:
+        return lessons[-limit:]
+    matched = [l for l in lessons if l.get("regime") == cur][-limit:]
+    if len(matched) >= limit:
+        return matched
+    others = [l for l in lessons if l.get("regime") != cur][-(limit - len(matched)):]
+    return others + matched
 
 
 COST_LOG_FILE = MEMORY_DIR / "cost_log.json"
