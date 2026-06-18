@@ -94,3 +94,54 @@ def get_live_size_mult(strategy_name: Optional[str]) -> float:
     if not strategy_name:
         return 1.0
     return float(_load_state().get("live_size_mult", {}).get(strategy_name, 1.0))
+
+
+def _save_state(state: Dict):
+    state["updated_at"] = datetime.now().isoformat()
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2))
+
+
+def run_reality_check() -> Dict:
+    """Compute gaps from trades, graduate the live mults, decay bad lessons, persist, return summary."""
+    from memory_store import load_trades, load_lessons, adjust_lesson_confidence
+    trades = load_trades()
+    gaps = compute_strategy_gaps(trades)
+    dangerous = detect_dangerous(gaps)
+    all_names = list(gaps.keys())
+    state = _load_state()
+    state = update_live_mults(dangerous, all_names, state)
+    state.setdefault("history", []).append({
+        "at": datetime.now().isoformat(), "dangerous": dangerous,
+        "mults": {n: state["live_size_mult"][n] for n in (dangerous or all_names)},
+    })
+    state["history"] = state["history"][-50:]
+    _save_state(state)
+    # lessons: decay confidence of lessons whose live track record is bad
+    lessons_decayed = 0
+    for l in load_lessons():
+        inv = l.get("times_invoked", 0) or 0
+        wrong = l.get("times_wrong", 0) or 0
+        if inv >= 5 and wrong > (inv / 2):  # mostly wrong when invoked
+            adjust_lesson_confidence(l.get("id"), -2)
+            lessons_decayed += 1
+    return {
+        "dangerous": dangerous,
+        "gaps": {n: gaps[n] for n in dangerous},
+        "live_size_mult": state["live_size_mult"],
+        "lessons_decayed": lessons_decayed,
+    }
+
+
+def format_alert(summary: Dict) -> str:
+    """Templated Telegram narrative (no LLM)."""
+    if not summary["dangerous"] and not summary["lessons_decayed"]:
+        return "🔍 Reality-Check: אין פערי-הכללה מסוכנים. הכל מכליל."
+    lines = ["🔍 Reality-Check — זוהו פערי paper↔live:"]
+    for n in summary["dangerous"]:
+        g = summary["gaps"][n]
+        lines.append(f"• {n}: paper EV {g['paper_ev']:+.3f}% → live EV {g['live_ev']:+.3f}% "
+                     f"(n_live={g['n_live']}) → size×{summary['live_size_mult'][n]:.2f}")
+    if summary["lessons_decayed"]:
+        lines.append(f"• {summary['lessons_decayed']} לקחים הונמכו (track-record חי גרוע).")
+    return "\n".join(lines)

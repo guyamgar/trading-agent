@@ -1480,6 +1480,22 @@ def _lesson_decay_loop():
             time.sleep(3600)
 
 
+def _reality_check_loop():
+    """
+    רץ פעם ב-6 שעות: בודק פערי paper↔live per strategy, מדעיך מכפילי גודל, שולח התראה.
+    """
+    import reality_check
+    time.sleep(90)  # let the scanner settle first
+    while True:
+        try:
+            summary = reality_check.run_reality_check()
+            if summary["dangerous"] or summary["lessons_decayed"]:
+                send_message(get_authorized_chat_id(), reality_check.format_alert(summary), parse_mode="")
+        except Exception as e:
+            print(f"⚠️ reality_check_loop: {e}")
+        time.sleep(6 * 60 * 60)  # every 6h
+
+
 def _regime_detector_loop():
     """
     כל 6 שעות בודק אם השוק שינה אופי באופן מובהק (z-score ≥ 2σ).
@@ -2292,6 +2308,10 @@ def main():
     holdout_thread = threading.Thread(target=_holdout_backtest_loop, daemon=True)
     holdout_thread.start()
     print("🧪 Hold-out backtest פעיל - בודק overfitting פעם בחודש.")
+
+    # 9. Reality-Check auditor - בודק פער paper↔live כל 6 שעות
+    threading.Thread(target=_reality_check_loop, daemon=True).start()
+    print("🔍 Reality-Check auditor פעיל - בודק פער paper↔live כל 6 שעות.")
 
     print("\nProgressing... Ctrl+C לעצירה.")
     print("=" * 60)
