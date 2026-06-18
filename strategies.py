@@ -33,6 +33,8 @@ class Strategy:
     position_size_mult: float = 1.0
     # סוג: "blessed" (וודאי-רווחית) או "anti" (לחסום)
     kind: str = "blessed"
+    # אם True — האסטרטגיה "מבורכת" רק בשוק דובי מאושש (EMA50<EMA200). אחרת לא נבחרת.
+    required_downtrend: bool = False
     # מטא-דאטה לתצוגה
     historical_wr: Optional[float] = None
     historical_trades: Optional[int] = None
@@ -183,6 +185,25 @@ STRATEGY_LIBRARY: List[Strategy] = [
         historical_trades=5,
         historical_avg_pnl=-0.25,
     ),
+    # ─── SHORT מונחה-רג'יים: משלים את ה-regime gate ───
+    Strategy(
+        name="Bear Short",
+        description=(
+            "Pullback/Bounce SHORT בשוק דובי מאושש (EMA50<EMA200), בחלון NY+Night+Asia "
+            "(מחריג London 7-13 שם short שלילי). משלים את ה-regime gate: כשלונגים חסומים "
+            "בירידה — יש מה לסחור. edge דק ומותנה-רג'יים (~+0.1-0.3%/עסקה)."
+        ),
+        start_hour_utc=13,
+        end_hour_utc=7,  # עובר חצות → פעיל 13-23 + 0-6 (NY+Night+Asia)
+        allowed_setups=["Pullback", "Bounce"],
+        allowed_directions=["SHORT"],
+        position_size_mult=1.0,  # edge דק — בלי boost
+        kind="blessed",
+        required_downtrend=True,
+        historical_wr=58.5,
+        historical_trades=65,
+        historical_avg_pnl=0.119,
+    ),
 ]
 
 
@@ -204,24 +225,37 @@ def is_candle_open_minute(dt_utc: Optional[datetime] = None) -> bool:
     return dt_utc.minute in CANDLE_OPEN_MINUTES
 
 
-def find_matching_strategy(timestamp_utc: datetime, setup_type: str, direction: str) -> Optional[Strategy]:
+def _is_confirmed_downtrend(market_summary: Optional[Dict]) -> bool:
+    """ירידה מאוששת = EMA50 < EMA200 ב-market_summary. אות זהה ל-regime gate; backtest-safe."""
+    if not market_summary:
+        return False
+    ind = market_summary.get("indicators") or {}
+    e50, e200 = ind.get("ema_50"), ind.get("ema_200")
+    return e50 is not None and e200 is not None and e50 < e200
+
+
+def find_matching_strategy(timestamp_utc: datetime, setup_type: str, direction: str,
+                           market_summary: Optional[Dict] = None) -> Optional[Strategy]:
     """
     מחזיר את האסטרטגיה הראשונה שמתאימה ל-(שעה, setup, direction).
+    אסטרטגיה עם required_downtrend נבחרת רק אם market_summary מראה ירידה מאוששת.
     מחזיר None אם לא תואם לאף אחת — סטאפ "ניסיוני".
-    אנטי-אסטרטגיה גם מוחזרת — הקוד שמשתמש בזה צריך לבדוק את kind.
     """
     for s in STRATEGY_LIBRARY:
         if s.is_active_at(timestamp_utc) and s.matches_setup(setup_type, direction):
+            if s.required_downtrend and not _is_confirmed_downtrend(market_summary):
+                continue  # אסטרטגיה מותנית-רג'יים, אבל לא בדאון-טרנד → דלג
             return s
     return None
 
 
-def classify_trade_intent(timestamp_utc: datetime, setup_type: str, direction: str) -> Dict:
+def classify_trade_intent(timestamp_utc: datetime, setup_type: str, direction: str,
+                          market_summary: Optional[Dict] = None) -> Dict:
     """
     הפונקציה הראשית שהוועדה/Hunter קוראת לפני החלטה.
     מחזירה: {strategy_name, kind, action_recommended, size_mult, context_for_committee, candle_open_boost}
     """
-    s = find_matching_strategy(timestamp_utc, setup_type, direction)
+    s = find_matching_strategy(timestamp_utc, setup_type, direction, market_summary)
     at_candle_open = is_candle_open_minute(timestamp_utc)
     boost_factor = CANDLE_OPEN_SIZE_BOOST if at_candle_open else 1.0
     boost_note = ""
