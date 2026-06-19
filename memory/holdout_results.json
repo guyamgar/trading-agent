@@ -103,5 +103,303 @@
         "error": "simulate_trade() missing 3 required positional arguments: 'entry_price', 'stop', and 'target_1'"
       }
     ]
+  },
+  {
+    "symbol": "BTCUSDT",
+    "ran_at": "2026-06-18T18:22:55.604948",
+    "holdout_window_days": "30-60",
+    "n_samples": 12,
+    "n_executed": 2,
+    "n_rejected": 6,
+    "n_no_setup": 3,
+    "n_errors": 1,
+    "wins": 1,
+    "losses": 1,
+    "win_rate_pct": 50.0,
+    "avg_pnl_pct": -0.044,
+    "total_pnl_pct": -0.088,
+    "in_sample": {
+      "days": 14,
+      "n": 1,
+      "win_rate_pct": 100.0,
+      "avg_pnl_pct": 0.572,
+      "total_pnl_pct": 0.572
+    },
+    "samples": [
+      {
+        "status": "rejected",
+        "idx": 380,
+        "setup_type": "Bounce",
+        "direction": "LONG",
+        "reason": "דחייה מרובת שכבות — כל ארבעת המומחים מתנגדים בדרגות שונות: (1) וטו פורמלי של מנהל הסיכונים: RR_net לT1 = 1.13 < מינימום 1.3 — קו אדום קשיח. (2) שלושה אורות אדומים: EMA stack דובי מושלם (200>50>21>9>מח"
+      },
+      {
+        "status": "no_setup",
+        "idx": 600
+      },
+      {
+        "status": "no_setup",
+        "idx": 722
+      },
+      {
+        "status": "rejected",
+        "idx": 956,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "reason": "וטו מנהל הסיכונים — RR לא תקין: T1 gross = 0.308% < 0.4% (עמלות Round Trip 0.2% אוכלות את הרווח, T1 net = 0.108% בלבד). T2 gross מהכניסה האמצעית (77,625) = 0.392% — עדיין מתחת לסף 0.4%, לכן גם T2-כ-יע"
+      },
+      {
+        "status": "rejected",
+        "idx": 1723,
+        "setup_type": "Pullback",
+        "direction": "SHORT",
+        "reason": "וטו עמלות מוחלט — שני היעדים נכשלים בחוק ה-0.4% המינימלי: T1 גרוס 0.193% → נטו = -0.007% (שלילי! עמלה אוכלת הכל), T2 גרוס 0.382% → נטו = +0.182% בלבד. גם היעד הטוב ביותר בסטאפ לא מכסה את עלות 0.2% Rou"
+      },
+      {
+        "status": "rejected",
+        "idx": 1835,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "reason": "REGIME GATE: LONG חסום — death cross (EMA50=79913.91 < EMA200=80390.35)"
+      },
+      {
+        "status": "executed",
+        "idx": 2140,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "entry": 81550.0,
+        "outcome": "stop",
+        "pnl_pct": -0.568,
+        "minutes_held": 405
+      },
+      {
+        "status": "no_setup",
+        "idx": 2254
+      },
+      {
+        "status": "hunter_error",
+        "idx": 2421,
+        "error": "timeout after 180s"
+      },
+      {
+        "status": "rejected",
+        "idx": 2433,
+        "setup_type": "Falling Wedge",
+        "direction": "LONG",
+        "reason": "דחייה על בסיס ארבעה כשלים עצמאיים: (1) וטו מנהל הסיכונים — RR_net T1 = 0.90, מתחת למינימום הקשיח 1.3; חישוב: stop_dist=0.33%, net_to_T1=0.30%, RR_net=0.90/1.3 לא עובר. (2) קורא ההקשר: 'להמתין' עם שני "
+      },
+      {
+        "status": "rejected",
+        "idx": 2582,
+        "setup_type": "Bounce",
+        "direction": "LONG",
+        "reason": "REGIME GATE: LONG חסום — death cross (EMA50=78893.15 < EMA200=79623.68)"
+      },
+      {
+        "status": "executed",
+        "idx": 2743,
+        "setup_type": "Pullback",
+        "direction": "SHORT",
+        "entry": 77200.0,
+        "outcome": "target_1",
+        "pnl_pct": 0.48,
+        "minutes_held": 270
+      }
+    ]
+  },
+  {
+    "symbol": "BTCUSDT",
+    "ran_at": "2026-06-18T20:32:09.553958",
+    "holdout_window_days": "30-60",
+    "n_samples": 30,
+    "n_executed": 3,
+    "n_rejected": 10,
+    "n_no_setup": 14,
+    "n_errors": 3,
+    "wins": 2,
+    "losses": 1,
+    "win_rate_pct": 66.7,
+    "avg_pnl_pct": 0.069,
+    "total_pnl_pct": 0.206,
+    "in_sample": {
+      "days": 14,
+      "n": 1,
+      "win_rate_pct": 100.0,
+      "avg_pnl_pct": 0.572,
+      "total_pnl_pct": 0.572
+    },
+    "samples": [
+      {
+        "status": "executed",
+        "idx": 395,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "entry": 78100.0,
+        "outcome": "target_1",
+        "pnl_pct": 0.297,
+        "minutes_held": 15
+      },
+      {
+        "status": "rejected",
+        "idx": 433,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "reason": "דחייה על בסיס שלושה עמודי וטו מצטברים: (1) הפרת חלון זמן יסודית — NY Pullback Trader מוגדר לפעול 13-21 UTC בלבד; הסטאפ ב-01:15 UTC (סשן אסיה) אינו עומד בדרישת הבסיס של האסטרטגיה — ה-WR 87.9% הושגה בNY"
+      },
+      {
+        "status": "no_setup",
+        "idx": 552
+      },
+      {
+        "status": "no_setup",
+        "idx": 628
+      },
+      {
+        "status": "rejected",
+        "idx": 647,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "reason": "REGIME GATE: LONG חסום — death cross (EMA50=77651.98 < EMA200=77685.16)"
+      },
+      {
+        "status": "no_setup",
+        "idx": 700
+      },
+      {
+        "status": "hunter_error",
+        "idx": 763,
+        "error": "timeout after 180s"
+      },
+      {
+        "status": "executed",
+        "idx": 778,
+        "setup_type": "Pullback",
+        "direction": "SHORT",
+        "entry": 77480.0,
+        "outcome": "target_1",
+        "pnl_pct": 0.355,
+        "minutes_held": 15
+      },
+      {
+        "status": "rejected",
+        "idx": 877,
+        "setup_type": "Bounce",
+        "direction": "LONG",
+        "reason": "REGIME GATE: LONG חסום — death cross (EMA50=76420.63 < EMA200=77121.05)"
+      },
+      {
+        "status": "no_setup",
+        "idx": 886
+      },
+      {
+        "status": "no_setup",
+        "idx": 1076
+      },
+      {
+        "status": "rejected",
+        "idx": 1100,
+        "setup_type": "Breakout",
+        "direction": "LONG",
+        "reason": "שלושה כשלים עצמאיים המצדיקים דחייה, גם בפייפר טרייד: (1) וטו מנהל הסיכונים — RR_net=0.95 < מינימום 1.3, T1 נטו=0.33% < 0.4% (עמלות בולעות 60% מהרווח הגולמי); (2) כלל e4bb9b66 — שני אורות אדומים מרכיבי"
+      },
+      {
+        "status": "no_setup",
+        "idx": 1154
+      },
+      {
+        "status": "rejected",
+        "idx": 1380,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "reason": "דחייה רב-שכבתית — ארבעה טעמים מצטברים בלתי ניתנים לעקיפה:\n\n1. ⛔ LESSON e4bb9b66 — שני אורות אדומים: קורא ההקשר ('להמתין') + המנתח הטכני (ציון עניין 2/10, 'הסטאפ פג תוקפו'). הלקח הזה, שהוכח 53/72 פעמים"
+      },
+      {
+        "status": "hunter_error",
+        "idx": 1557,
+        "error": "timeout after 180s"
+      },
+      {
+        "status": "no_setup",
+        "idx": 1639
+      },
+      {
+        "status": "rejected",
+        "idx": 1660,
+        "setup_type": "Breakout",
+        "direction": "LONG",
+        "reason": "דחייה על בסיס 5 גורמים משולבים: (1) מנהל הסיכונים — TIMEOUT לאחר 150 שניות — אין אישור RR רשמי, לא ניתן לאמת שהמתמטיקה תקינה; (2) שני אורות אדומים פעילים מ-2 רכיבים שונים: קורא ההקשר קבע 'להמתין' (MAC"
+      },
+      {
+        "status": "no_setup",
+        "idx": 1668
+      },
+      {
+        "status": "no_setup",
+        "idx": 1898
+      },
+      {
+        "status": "no_setup",
+        "idx": 1977
+      },
+      {
+        "status": "no_setup",
+        "idx": 2022
+      },
+      {
+        "status": "rejected",
+        "idx": 2059,
+        "setup_type": "Bounce",
+        "direction": "LONG",
+        "reason": "ארבעה נימוקים מצטברים לדחייה:\n\n1. ⛔ SETUP פג תוקף — המחיר (82,210) כבר מעל אזור הכניסה המוגדר (81,800–82,000). הצייד מצא Bounce ב-80,279 שהוביל לעלייה — הכניסה האופטימלית עברה. כניסה בשוק עכשיו חורגת "
+      },
+      {
+        "status": "rejected",
+        "idx": 2096,
+        "setup_type": "Bounce",
+        "direction": "LONG",
+        "reason": "דחייה על בסיס שלושה וטואים עצמאיים מצטברים: (1) וטו רשמי מנהל סיכונים — RR_net ל-T1 = 1.02 מתחת לסף המינימלי 1.3; חישוב: gross 0.618% − עמלות 0.20% = net 0.418% / stop 0.411% = RR 1.02. (2) וטו קורא ה"
+      },
+      {
+        "status": "no_setup",
+        "idx": 2280
+      },
+      {
+        "status": "hunter_error",
+        "idx": 2392,
+        "error": "timeout after 180s"
+      },
+      {
+        "status": "executed",
+        "idx": 2438,
+        "setup_type": "Pullback",
+        "direction": "LONG",
+        "entry": 81400.0,
+        "outcome": "stop",
+        "pnl_pct": -0.446,
+        "minutes_held": 30
+      },
+      {
+        "status": "rejected",
+        "idx": 2495,
+        "setup_type": "Breakout",
+        "direction": "SHORT",
+        "reason": "REGIME GATE: SHORT חסום — golden cross (EMA50=80722.04 > EMA200=80584.46)"
+      },
+      {
+        "status": "rejected",
+        "idx": 2569,
+        "setup_type": "Pullback",
+        "direction": "SHORT",
+        "reason": "וטו של מנהל הסיכונים — RR לא תקין בכל היעדים. למרות ALIGN_STRATEGY: NY Counter-Trend Short (WR 80%), המתמטיקה שוברת את הסטאפ: כניסה מרכז 78,425 | סטופ 78,700 = סטופ-דיסטנס 0.351%. T1 גרוס=0.287% → נטו"
+      },
+      {
+        "status": "no_setup",
+        "idx": 2582
+      },
+      {
+        "status": "no_setup",
+        "idx": 2684
+      }
+    ]
   }
 ]

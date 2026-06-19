@@ -1,50 +1,50 @@
 {
-  "regime_changed": false,
-  "max_shift_metric": "trend_strength_pct",
-  "max_shift_z": -0.89,
+  "regime_changed": true,
+  "max_shift_metric": "rsi_mean",
+  "max_shift_z": 2.97,
   "shifts": {
     "atr_pct_mean": {
-      "z_score": 0.83,
-      "baseline_mean": 1.268,
-      "baseline_std": 0.058,
-      "current": 1.316
+      "z_score": -0.1,
+      "baseline_mean": 1.739,
+      "baseline_std": 0.676,
+      "current": 1.672
     },
     "rsi_mean": {
-      "z_score": -0.63,
-      "baseline_mean": 46.487,
-      "baseline_std": 8.989,
-      "current": 40.82
+      "z_score": 2.97,
+      "baseline_mean": 38.096,
+      "baseline_std": 6.354,
+      "current": 56.96
     },
     "trend_strength_pct": {
-      "z_score": -0.89,
-      "baseline_mean": -1.892,
-      "baseline_std": 2.686,
-      "current": -4.283
+      "z_score": 2.17,
+      "baseline_mean": -6.904,
+      "baseline_std": 4.064,
+      "current": 1.927
     },
     "body_to_range": {
-      "z_score": -0.82,
-      "baseline_mean": 0.394,
-      "baseline_std": 0.028,
-      "current": 0.371
+      "z_score": 1.68,
+      "baseline_mean": 0.372,
+      "baseline_std": 0.027,
+      "current": 0.417
     }
   },
   "baseline_fingerprint": {
-    "atr_pct_mean": 1.282,
-    "rsi_mean": 47.24,
-    "trend_strength_pct": -8.464,
-    "body_to_range": 0.399
+    "atr_pct_mean": 1.808,
+    "rsi_mean": 39.64,
+    "trend_strength_pct": -26.63,
+    "body_to_range": 0.385
   },
   "recent_fingerprint": {
-    "atr_pct_mean": 1.316,
-    "rsi_mean": 40.82,
-    "trend_strength_pct": -4.283,
-    "body_to_range": 0.371
+    "atr_pct_mean": 1.672,
+    "rsi_mean": 56.96,
+    "trend_strength_pct": 1.927,
+    "body_to_range": 0.417
   },
-  "explanation": "השוק יציב",
+  "explanation": "RSI ממוצע ↑ (+3.0σ: 38.10→56.96) | כוח טרנד ↑ (+2.2σ: -6.90→1.93)",
   "symbol": "ETHUSDT",
-  "computed_at": "2026-06-02T04:51:43.367845",
+  "computed_at": "2026-06-19T04:37:36.264675",
   "is_new_alert": false,
-  "updated_at": "2026-06-02T04:51:43.368396",
+  "updated_at": "2026-06-19T04:37:36.265745",
   "alerts_history": [
     {
       "at": "2026-05-28T03:42:09.788901",
@@ -69,6 +69,78 @@
       "metric": "atr_pct_mean",
       "z": 3.7,
       "explanation": "תנודתיות ↑ (+3.7σ: 1.25→1.42)"
+    },
+    {
+      "at": "2026-06-18T13:39:24.670532",
+      "metric": "rsi_mean",
+      "z": 3.77,
+      "explanation": "RSI ממוצע ↑ (+3.8σ: 38.05→60.77)"
+    },
+    {
+      "at": "2026-06-18T13:39:25.379754",
+      "metric": "rsi_mean",
+      "z": 3.85,
+      "explanation": "RSI ממוצע ↑ (+3.8σ: 38.10→58.92) | כוח טרנד ↑ (+2.3σ: -6.78→1.94)"
+    },
+    {
+      "at": "2026-06-18T19:39:25.714429",
+      "metric": "rsi_mean",
+      "z": 3.44,
+      "explanation": "RSI ממוצע ↑ (+3.4σ: 37.98→59.47)"
+    },
+    {
+      "at": "2026-06-18T19:39:26.054619",
+      "metric": "rsi_mean",
+      "z": 3.54,
+      "explanation": "RSI ממוצע ↑ (+3.5σ: 38.09→57.96) | כוח טרנד ↑ (+2.2σ: -6.72→1.83)"
+    },
+    {
+      "at": "2026-06-18T21:40:17.641240",
+      "metric": "rsi_mean",
+      "z": 3.44,
+      "explanation": "RSI ממוצע ↑ (+3.4σ: 37.98→59.47)"
+    },
+    {
+      "at": "2026-06-18T21:40:18.006537",
+      "metric": "rsi_mean",
+      "z": 3.53,
+      "explanation": "RSI ממוצע ↑ (+3.5σ: 38.09→57.90) | כוח טרנד ↑ (+2.1σ: -6.72→1.82)"
+    },
+    {
+      "at": "2026-06-18T22:14:18.594496",
+      "metric": "rsi_mean",
+      "z": 3.44,
+      "explanation": "RSI ממוצע ↑ (+3.4σ: 37.98→59.46)"
+    },
+    {
+      "at": "2026-06-18T22:14:18.953291",
+      "metric": "rsi_mean",
+      "z": 3.53,
+      "explanation": "RSI ממוצע ↑ (+3.5σ: 38.09→57.94) | כוח טרנד ↑ (+2.2σ: -6.72→1.83)"
+    },
+    {
+      "at": "2026-06-18T22:37:34.900487",
+      "metric": "rsi_mean",
+      "z": 3.44,
+      "explanation": "RSI ממוצע ↑ (+3.4σ: 37.98→59.50)"
+    },
+    {
+      "at": "2026-06-18T22:37:35.260268",
+      "metric": "rsi_mean",
+      "z": 3.55,
+      "explanation": "RSI ממוצע ↑ (+3.5σ: 38.09→58.01) | כוח טרנד ↑ (+2.2σ: -6.72→1.85)"
+    },
+    {
+      "at": "2026-06-19T04:37:35.912409",
+      "metric": "rsi_mean",
+      "z": 2.93,
+      "explanation": "RSI ממוצע ↑ (+2.9σ: 37.97→57.96)"
+    },
+    {
+      "at": "2026-06-19T04:37:36.264675",
+      "metric": "rsi_mean",
+      "z": 2.97,
+      "explanation": "RSI ממוצע ↑ (+3.0σ: 38.10→56.96) | כוח טרנד ↑ (+2.2σ: -6.90→1.93)"
     }
   ]
 }

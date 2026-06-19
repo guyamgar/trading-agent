@@ -1,63 +1,31 @@
 {
-  "NY Pullback Trader": {
-    "trades": 33,
-    "wins": 29,
-    "losses": 4,
-    "total_pnl": 17.672,
-    "best_pnl": 1.448,
-    "worst_pnl": -0.499,
-    "first_trade_at": "2026-06-01T08:59:14.197052",
-    "last_trade_at": "2026-06-01T08:59:14.228137"
-  },
-  "updated_at": "2026-06-02T05:18:47.784988",
-  "Asian Range": {
-    "trades": 32,
-    "wins": 24,
-    "losses": 8,
-    "total_pnl": 9.684999999999999,
-    "best_pnl": 0.714,
-    "worst_pnl": -0.817,
-    "first_trade_at": "2026-06-01T08:59:14.197439",
-    "last_trade_at": "2026-06-02T04:41:05.189828"
-  },
-  "_experimental_": {
-    "trades": 133,
-    "wins": 75,
-    "losses": 58,
-    "total_pnl": 16.732,
-    "best_pnl": 1.721,
-    "worst_pnl": -1.034,
-    "first_trade_at": "2026-06-01T08:59:14.198112",
-    "last_trade_at": "2026-06-02T05:18:47.784978"
-  },
-  "London Bouncer": {
-    "trades": 31,
-    "wins": 24,
-    "losses": 7,
-    "total_pnl": 17.846,
-    "best_pnl": 1.813,
-    "worst_pnl": -1.094,
-    "first_trade_at": "2026-06-01T08:59:14.201999",
-    "last_trade_at": "2026-06-01T16:56:42.584317"
-  },
-  "NY Counter-Trend Short": {
-    "trades": 21,
-    "wins": 17,
-    "losses": 4,
-    "total_pnl": 6.545000000000002,
-    "best_pnl": 0.806,
-    "worst_pnl": -0.362,
-    "first_trade_at": "2026-06-01T08:59:14.202901",
-    "last_trade_at": "2026-06-01T16:45:41.825407"
-  },
   "Night Owl": {
-    "trades": 29,
-    "wins": 22,
-    "losses": 7,
-    "total_pnl": 14.904999999999998,
-    "best_pnl": 1.38,
-    "worst_pnl": -0.591,
-    "first_trade_at": "2026-06-01T08:59:14.215833",
-    "last_trade_at": "2026-06-02T01:09:25.957785"
+    "trades": 1,
+    "wins": 1,
+    "losses": 0,
+    "total_pnl": 0.4,
+    "best_pnl": 0.4,
+    "worst_pnl": 0.4,
+    "first_trade_at": "2026-06-18T22:34:06.837207",
+    "last_trade_at": "2026-06-18T22:34:06.837207"
+  },
+  "updated_at": "2026-06-18T22:40:50.352114",
+  "NY Counter-Trend Short": {
+    "trades": 1,
+    "wins": 0,
+    "losses": 1,
+    "total_pnl": -0.471,
+    "best_pnl": -0.471,
+    "worst_pnl": -0.471,
+    "first_trade_at": "2026-06-18T22:40:50.352097",
+    "last_trade_at": "2026-06-18T22:40:50.352097",
+    "by_regime": {
+      "unknown": {
+        "trades": 1,
+        "wins": 0,
+        "losses": 1,
+        "total_pnl": -0.471
+      }
+    }
   }
 }

@@ -1,0 +1,53 @@
+{
+  "live_size_mult": {
+    "ANTI: London Pullback SHORT": 1.0,
+    "London Bouncer": 1.0,
+    "NY Pullback Trader": 1.0,
+    "Night Owl": 1.0,
+    "London Sweep Reversal": 1.0,
+    "Bear Short": 1.0,
+    "NY Opening Range Breakout": 1.0,
+    "Asian Range": 1.0,
+    "NY Counter-Trend Short": 1.0,
+    "_experimental_": 0.49
+  },
+  "history": [
+    {
+      "at": "2026-06-18T22:36:04.516852",
+      "dangerous": [
+        "_experimental_"
+      ],
+      "mults": {
+        "NY Pullback Trader": 1.0,
+        "Asian Range": 1.0,
+        "_experimental_": 0.7,
+        "London Sweep Reversal": 1.0,
+        "Bear Short": 1.0,
+        "London Bouncer": 1.0,
+        "NY Counter-Trend Short": 1.0,
+        "ANTI: London Pullback SHORT": 1.0,
+        "NY Opening Range Breakout": 1.0,
+        "Night Owl": 1.0
+      }
+    },
+    {
+      "at": "2026-06-19T04:36:04.949433",
+      "dangerous": [
+        "_experimental_"
+      ],
+      "mults": {
+        "NY Pullback Trader": 1.0,
+        "Asian Range": 1.0,
+        "_experimental_": 0.49,
+        "London Sweep Reversal": 1.0,
+        "Bear Short": 1.0,
+        "London Bouncer": 1.0,
+        "NY Counter-Trend Short": 1.0,
+        "ANTI: London Pullback SHORT": 1.0,
+        "NY Opening Range Breakout": 1.0,
+        "Night Owl": 1.0
+      }
+    }
+  ],
+  "updated_at": "2026-06-19T04:36:04.949454"
+}
