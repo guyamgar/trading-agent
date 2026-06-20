@@ -9,22 +9,64 @@
     "first_trade_at": "2026-06-18T22:34:06.837207",
     "last_trade_at": "2026-06-18T22:34:06.837207"
   },
-  "updated_at": "2026-06-18T22:40:50.352114",
+  "updated_at": "2026-06-20T04:12:21.795877",
   "NY Counter-Trend Short": {
-    "trades": 1,
+    "trades": 2,
     "wins": 0,
-    "losses": 1,
-    "total_pnl": -0.471,
+    "losses": 2,
+    "total_pnl": -0.967,
     "best_pnl": -0.471,
-    "worst_pnl": -0.471,
+    "worst_pnl": -0.496,
     "first_trade_at": "2026-06-18T22:40:50.352097",
-    "last_trade_at": "2026-06-18T22:40:50.352097",
+    "last_trade_at": "2026-06-20T02:58:44.407873",
     "by_regime": {
       "unknown": {
         "trades": 1,
         "wins": 0,
         "losses": 1,
         "total_pnl": -0.471
+      },
+      "range": {
+        "trades": 1,
+        "wins": 0,
+        "losses": 1,
+        "total_pnl": -0.496
+      }
+    }
+  },
+  "Bear Short": {
+    "trades": 2,
+    "wins": 1,
+    "losses": 1,
+    "total_pnl": 0.26499999999999996,
+    "best_pnl": 0.73,
+    "worst_pnl": -0.465,
+    "first_trade_at": "2026-06-19T09:32:27.774166",
+    "last_trade_at": "2026-06-19T12:13:33.282437",
+    "by_regime": {
+      "bear": {
+        "trades": 2,
+        "wins": 1,
+        "losses": 1,
+        "total_pnl": 0.26499999999999996
+      }
+    }
+  },
+  "_experimental_": {
+    "trades": 11,
+    "wins": 6,
+    "losses": 5,
+    "total_pnl": -0.5969999999999998,
+    "best_pnl": 0.344,
+    "worst_pnl": -0.567,
+    "first_trade_at": "2026-06-19T17:14:21.609891",
+    "last_trade_at": "2026-06-20T04:12:21.795867",
+    "by_regime": {
+      "range": {
+        "trades": 11,
+        "wins": 6,
+        "losses": 5,
+        "total_pnl": -0.5969999999999998
       }
     }
   }
