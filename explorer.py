@@ -72,3 +72,59 @@ def discover_candidates(trades: List[Dict]) -> List[Dict]:
                       "setup": setup, "direction": direction, "required_regime": regime,
                       "n": n, "wr": round(wr, 1), "ev": round(ev, 3)})
     return cands
+
+
+def _load_discovered_raw() -> List[Dict]:
+    if not DISCOVERED_FILE.exists():
+        return []
+    try:
+        return json.loads(DISCOVERED_FILE.read_text())
+    except Exception:
+        return []
+
+
+def _cand_key(c: Dict) -> tuple:
+    return (c["start_hour_utc"], c["end_hour_utc"], c["setup"], c["direction"], c["required_regime"])
+
+
+def promote_candidate(cand: Dict) -> Dict:
+    """Write a discovered strategy at SMALL size (0.5); RC's live_size_mult grows/shrinks it."""
+    name = f"Explorer: {cand['session']} {cand['setup']} {cand['direction']} ({cand['required_regime']})"
+    rec = {
+        "name": name,
+        "description": f"discovered {cand['n']} trades WR {cand['wr']}% EV {cand['ev']}% in {cand['required_regime']}",
+        "start_hour_utc": cand["start_hour_utc"], "end_hour_utc": cand["end_hour_utc"],
+        "allowed_setups": [cand["setup"]], "allowed_directions": [cand["direction"]],
+        "position_size_mult": 0.5, "kind": "blessed", "required_regime": cand["required_regime"],
+        "source": "explorer", "hist_wr": cand["wr"], "hist_trades": cand["n"],
+    }
+    disc = _load_discovered_raw()
+    disc.append(rec)
+    DISCOVERED_FILE.parent.mkdir(parents=True, exist_ok=True)
+    DISCOVERED_FILE.write_text(json.dumps(disc, ensure_ascii=False, indent=2))
+    return rec
+
+
+def run_explorer() -> Dict:
+    from memory_store import load_trades
+    cands = discover_candidates(load_trades())
+    existing_keys = {(d["start_hour_utc"], d["end_hour_utc"], d["allowed_setups"][0],
+                      d["allowed_directions"][0], d.get("required_regime"))
+                     for d in _load_discovered_raw()
+                     if d.get("allowed_setups") and d.get("allowed_directions")}
+    promoted = []
+    for c in cands:
+        if _cand_key(c) in existing_keys:
+            continue
+        promoted.append(promote_candidate(c))
+        existing_keys.add(_cand_key(c))
+    return {"promoted": promoted, "candidates": cands}
+
+
+def format_explorer_alert(summary: Dict) -> str:
+    if not summary["promoted"]:
+        return "Explorer: אין מועמדים חדשים שעוברים את הסף."
+    lines = ["Explorer — אסטרטגיות חדשות קודמו (גודל קטן, RC ישפוט):"]
+    for r in summary["promoted"]:
+        lines.append(f"  {r['name']} — WR {r['hist_wr']}% על {r['hist_trades']} עסקאות, size x0.5")
+    return "\n".join(lines)
