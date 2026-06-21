@@ -1701,8 +1701,10 @@ def _live_auto_scanner_loop():
     # מחכה 60 שניות לפני התחלה ראשונה כדי שהבוט יספיק להעלות
     time.sleep(60)
     sym_idx = 0
-    # מרווח בין סריקות: 15 דקות חלקי מספר הסימבולים, כך שכל סימבול נסרק כל 15 דק'
-    interval = max(60, 900 // max(len(SYMBOLS), 1))
+    # מרווח בין סריקות: SCAN_CYCLE_SECONDS חלקי מספר הסימבולים, כך שכל סימבול נסרק כל SCAN_CYCLE_SECONDS.
+    # ה-pre-filter (is_market_worth_scanning) חוסך LLM כשהשוק שקט, אז קצב גבוה זול.
+    from config import SCAN_CYCLE_SECONDS
+    interval = max(60, SCAN_CYCLE_SECONDS // max(len(SYMBOLS), 1))
     while True:
         try:
             # מתג השבתה ראשי
@@ -2171,7 +2173,7 @@ def cmd_help(chat_id: int):
 💬 *אפשר גם לכתוב שאלות חופשיות* כמו "כמה הרווחנו?" - הבוט עונה באנלוגיות פשוטות.
 
 🤖 *רץ אוטומטית ברקע:*
-• Auto-Scanner סורק כל 15 דק'
+• Auto-Scanner סורק כל 3 דק' (לכל סימבול)
 • Live Monitor בודק פתוחות כל 5 דק'
 • תקציר יומי ב-23:00
 • גיבוי GitHub ב-23:30"""
@@ -2294,7 +2296,7 @@ def main():
     # 1. Auto-scanner - סורק שוק כל 15 דק' ומחפש setups
     scanner_thread = threading.Thread(target=_live_auto_scanner_loop, daemon=True)
     scanner_thread.start()
-    print("🤖 Auto-scanner פעיל - סורק שוק חי כל 15 דק'.")
+    print("🤖 Auto-scanner פעיל - סורק שוק חי כל 3 דק'.")
 
     # 2. Monitor - בודק המלצות פתוחות כל 5 דק' (stop/target/timeout)
     monitor_thread = threading.Thread(target=_live_monitor_loop, daemon=True)
