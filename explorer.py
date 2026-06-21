@@ -24,14 +24,18 @@ def _session_bucket(hour: int) -> Tuple[str, int, int]:
     return "Night", 21, 24
 
 
-def _already_covered(start: int, end: int, setup: str, direction: str) -> bool:
+def _already_covered(start: int, end: int, setup: str, direction: str, regime: str) -> bool:
     """True if a blessed STRATEGY_LIBRARY entry already covers this window+setup+direction
-    (probed at the bucket mid-hour)."""
+    (probed at the bucket mid-hour). Bear-only strategies (required_downtrend=True) are
+    treated as covering ONLY bear-regime candidates."""
     mid = (start + end) // 2
     dt = datetime(2026, 1, 1, mid, 30)
     for s in STRATEGY_LIBRARY:
-        if s.kind == "blessed" and s.is_active_at(dt) and s.matches_setup(setup, direction):
-            return True
+        if s.kind != "blessed" or not s.is_active_at(dt) or not s.matches_setup(setup, direction):
+            continue
+        if s.required_downtrend and regime != "bear":
+            continue  # bear-only strategy does not cover non-bear candidates
+        return True
     return False
 
 
@@ -62,7 +66,7 @@ def discover_candidates(trades: List[Dict]) -> List[Dict]:
         ev = sum(pnls) / n
         if wr < MIN_WR or ev < MIN_EV:
             continue
-        if _already_covered(a, b, setup, direction):
+        if _already_covered(a, b, setup, direction, regime):
             continue
         cands.append({"session": sess, "start_hour_utc": a, "end_hour_utc": b,
                       "setup": setup, "direction": direction, "required_regime": regime,
