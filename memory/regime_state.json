@@ -1,50 +1,50 @@
 {
   "regime_changed": true,
-  "max_shift_metric": "rsi_mean",
-  "max_shift_z": 2.24,
+  "max_shift_metric": "body_to_range",
+  "max_shift_z": 2.83,
   "shifts": {
     "atr_pct_mean": {
-      "z_score": -0.19,
-      "baseline_mean": 1.803,
-      "baseline_std": 0.692,
-      "current": 1.674
+      "z_score": -0.22,
+      "baseline_mean": 1.847,
+      "baseline_std": 0.698,
+      "current": 1.695
     },
     "rsi_mean": {
-      "z_score": 2.24,
-      "baseline_mean": 38.377,
-      "baseline_std": 6.8,
-      "current": 53.61
+      "z_score": 2.51,
+      "baseline_mean": 39.44,
+      "baseline_std": 5.259,
+      "current": 52.64
     },
     "trend_strength_pct": {
-      "z_score": 1.99,
-      "baseline_mean": -6.866,
-      "baseline_std": 4.421,
-      "current": 1.949
+      "z_score": 2.12,
+      "baseline_mean": -6.795,
+      "baseline_std": 4.256,
+      "current": 2.215
     },
     "body_to_range": {
-      "z_score": 1.53,
-      "baseline_mean": 0.376,
-      "baseline_std": 0.035,
-      "current": 0.429
+      "z_score": 2.83,
+      "baseline_mean": 0.375,
+      "baseline_std": 0.029,
+      "current": 0.458
     }
   },
   "baseline_fingerprint": {
-    "atr_pct_mean": 1.825,
-    "rsi_mean": 40.34,
-    "trend_strength_pct": -25.379,
-    "body_to_range": 0.375
+    "atr_pct_mean": 1.821,
+    "rsi_mean": 40.82,
+    "trend_strength_pct": -24.802,
+    "body_to_range": 0.373
   },
   "recent_fingerprint": {
-    "atr_pct_mean": 1.674,
-    "rsi_mean": 53.61,
-    "trend_strength_pct": 1.949,
-    "body_to_range": 0.429
+    "atr_pct_mean": 1.695,
+    "rsi_mean": 52.64,
+    "trend_strength_pct": 2.215,
+    "body_to_range": 0.458
   },
-  "explanation": "RSI ממוצע ↑ (+2.2σ: 38.38→53.61)",
+  "explanation": "RSI ממוצע ↑ (+2.5σ: 39.44→52.64) | כוח טרנד ↑ (+2.1σ: -6.80→2.21) | אופי נרות ↑ (+2.8σ: 0.38→0.46)",
   "symbol": "ETHUSDT",
-  "computed_at": "2026-06-20T04:37:39.433807",
-  "is_new_alert": false,
-  "updated_at": "2026-06-20T04:37:39.434573",
+  "computed_at": "2026-06-21T04:37:43.188369",
+  "is_new_alert": true,
+  "updated_at": "2026-06-21T04:37:43.189601",
   "alerts_history": [
     {
       "at": "2026-05-28T03:42:09.788901",
@@ -189,6 +189,36 @@
       "metric": "rsi_mean",
       "z": 2.24,
       "explanation": "RSI ממוצע ↑ (+2.2σ: 38.38→53.61)"
+    },
+    {
+      "at": "2026-06-20T10:37:39.710559",
+      "metric": "rsi_mean",
+      "z": 2.02,
+      "explanation": "RSI ממוצע ↑ (+2.0σ: 38.58→52.92)"
+    },
+    {
+      "at": "2026-06-20T10:37:40.062003",
+      "metric": "rsi_mean",
+      "z": 2.16,
+      "explanation": "RSI ממוצע ↑ (+2.2σ: 38.37→53.06) | כוח טרנד ↑ (+2.1σ: -7.02→1.98) | אופי נרות ↑ (+2.1σ: 0.38→0.43)"
+    },
+    {
+      "at": "2026-06-20T16:37:40.875868",
+      "metric": "trend_strength_pct",
+      "z": 2.2,
+      "explanation": "RSI ממוצע ↑ (+2.1σ: 38.70→52.26) | כוח טרנד ↑ (+2.2σ: -7.15→2.02)"
+    },
+    {
+      "at": "2026-06-20T22:37:41.952879",
+      "metric": "trend_strength_pct",
+      "z": 2.24,
+      "explanation": "RSI ממוצע ↑ (+2.2σ: 38.91→52.21) | כוח טרנד ↑ (+2.2σ: -7.15→2.10)"
+    },
+    {
+      "at": "2026-06-21T04:37:43.188369",
+      "metric": "body_to_range",
+      "z": 2.83,
+      "explanation": "RSI ממוצע ↑ (+2.5σ: 39.44→52.64) | כוח טרנד ↑ (+2.1σ: -6.80→2.21) | אופי נרות ↑ (+2.8σ: 0.38→0.46)"
     }
   ]
 }

@@ -252,6 +252,54 @@
       "times_wrong": 0,
       "overrides_attempted": 0,
       "overrides_successful": 0
+    },
+    {
+      "rule": "כאשר מרחק הסטופ קטן מ-0.25% מהכניסה (~160 נקודות ב-BTC), העמלה הכוללת (0.2%) גוזלת 50% ומעלה מהרווח הגולמי עד T1 ב-RR=2 — אסור להיכנס לסטאפ עם סטופ קטן מ-0.25%, גם אם ציון האיכות עומד בתנאי ה-OVERRIDE",
+      "trigger": "כל סטאפ שבו מרחק הסטופ מהכניסה קטן מ-0.25% (~160 נקודות בטווח BTC 63K), ללא קשר לסוג הסטאפ או ציון האיכות",
+      "category": "סיכון",
+      "from_outcome": "target_1",
+      "live_mode": true,
+      "regime": "range",
+      "id": "77c3af02",
+      "created_at": "2026-06-20T05:08:40.694489",
+      "confidence": 1,
+      "times_invoked": 0,
+      "times_correct": 0,
+      "times_wrong": 0,
+      "overrides_attempted": 0,
+      "overrides_successful": 0
+    },
+    {
+      "rule": "גולדן-קרוס שחוסם SHORT אסור לעקוף בטענת 'פער מינימלי' בין EMA50 ל-EMA200 — כל פער חיובי, ולו זעיר, הוא מבנה שורי תקף שיש לכבד",
+      "trigger": "כאשר ADVOCATE מבקש OVERRIDE על גולדן-קרוס חוסם-SHORT בנימוק שהפער בין EMA50 ל-EMA200 קטן מ-ATR או מ-X נקודות",
+      "category": "טכני",
+      "from_outcome": "stop",
+      "live_mode": true,
+      "regime": "bull",
+      "id": "71ad965a",
+      "created_at": "2026-06-20T14:50:28.823466",
+      "confidence": 1,
+      "times_invoked": 0,
+      "times_correct": 0,
+      "times_wrong": 0,
+      "overrides_attempted": 0,
+      "overrides_successful": 0
+    },
+    {
+      "rule": "כשקורא ההקשר אומר 'להמתין' ולא 'להימנע' — זה לא וטו. כנס דרך לימיט בלבד ואל תוותר על העסקה כולה.",
+      "trigger": "כשקורא ההקשר מוציא המלצת המתנה/תזמון בלי לאסור את הכניסה במפורש",
+      "category": "הקשר",
+      "from_outcome": "target_2",
+      "live_mode": true,
+      "regime": "bull",
+      "id": "ac034b2c",
+      "created_at": "2026-06-20T15:21:45.940291",
+      "confidence": 1,
+      "times_invoked": 0,
+      "times_correct": 0,
+      "times_wrong": 0,
+      "overrides_attempted": 0,
+      "overrides_successful": 0
     }
   ]
 }
