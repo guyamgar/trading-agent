@@ -1499,6 +1499,25 @@ def _reality_check_loop():
         time.sleep(6 * 60 * 60)  # every 6h
 
 
+def _explorer_loop():
+    """
+    רץ פעם בשבוע: מגלה אסטרטגיות חדשות מהמסחר הסגור ושולח התראת טלגרם על קידומים.
+    """
+    import explorer
+    time.sleep(120)  # settle after startup
+    while True:
+        if is_paused():
+            time.sleep(7 * 24 * 60 * 60)
+            continue
+        try:
+            summary = explorer.run_explorer()
+            if summary["promoted"]:
+                send_message(get_authorized_chat_id(), explorer.format_explorer_alert(summary), parse_mode="")
+        except Exception as e:
+            print(f"⚠️ explorer_loop: {e}")
+        time.sleep(7 * 24 * 60 * 60)  # weekly
+
+
 def _regime_detector_loop():
     """
     כל 6 שעות בודק אם השוק שינה אופי באופן מובהק (z-score ≥ 2σ).
@@ -2315,6 +2334,10 @@ def main():
     # 9. Reality-Check auditor - בודק פער paper↔live כל 6 שעות
     threading.Thread(target=_reality_check_loop, daemon=True).start()
     print("🔍 Reality-Check auditor פעיל - בודק פער paper↔live כל 6 שעות.")
+
+    # 10. Explorer - מגלה אסטרטגיות חדשות מהמסחר הסגור (פעם בשבוע)
+    threading.Thread(target=_explorer_loop, daemon=True).start()
+    print("🔭 Explorer פעיל - מגלה אסטרטגיות חדשות פעם בשבוע.")
 
     print("\nProgressing... Ctrl+C לעצירה.")
     print("=" * 60)

@@ -149,6 +149,7 @@ def close_recommendation(rec: dict, exit_info: dict, verbose: bool = True) -> di
 
     # שמירת לקח
     _regime = rec.get("regime", "unknown")
+    trade_obj["regime"] = _regime
     new_lesson = (coach or {}).get("לקח_חדש")
     if new_lesson and new_lesson not in (None, "null", "אין לקח חדש"):
         save_lesson({
