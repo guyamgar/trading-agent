@@ -35,6 +35,8 @@ class Strategy:
     kind: str = "blessed"
     # אם True — האסטרטגיה "מבורכת" רק בשוק דובי מאושש (EMA50<EMA200). אחרת לא נבחרת.
     required_downtrend: bool = False
+    # אם מוגדר — האסטרטגיה (בד"כ discovered) נבחרת רק כשהרג'יים הנוכחי תואם.
+    required_regime: Optional[str] = None
     # מטא-דאטה לתצוגה
     historical_wr: Optional[float] = None
     historical_trades: Optional[int] = None
@@ -97,7 +99,7 @@ STRATEGY_LIBRARY: List[Strategy] = [
         start_hour_utc=13,
         end_hour_utc=16,
         allowed_setups=["Breakout"],
-        allowed_directions=["LONG", "SHORT"],  # פריצה לכל כיוון
+        allowed_directions=["LONG"],  # ETF-flow momentum — bullish breakouts only; SHORT breakouts via discovered strategies
         position_size_mult=1.2,
         kind="blessed",
         historical_wr=None,
@@ -234,6 +236,33 @@ def _is_confirmed_downtrend(market_summary: Optional[Dict]) -> bool:
     return e50 is not None and e200 is not None and e50 < e200
 
 
+DISCOVERED_FILE = ROOT / "memory" / "discovered_strategies.json"
+
+
+def load_discovered_strategies() -> List[Strategy]:
+    """אסטרטגיות שה-Explorer גילה (memory/discovered_strategies.json). שדות תואמי-Strategy בלבד."""
+    if not DISCOVERED_FILE.exists():
+        return []
+    try:
+        raw = json.loads(DISCOVERED_FILE.read_text())
+    except Exception:
+        return []
+    out = []
+    for d in raw:
+        try:
+            out.append(Strategy(
+                name=d["name"], description=d.get("description", ""),
+                start_hour_utc=int(d["start_hour_utc"]), end_hour_utc=int(d["end_hour_utc"]),
+                allowed_setups=d.get("allowed_setups"), allowed_directions=d.get("allowed_directions"),
+                position_size_mult=float(d.get("position_size_mult", 0.5)),
+                kind=d.get("kind", "blessed"),
+                required_regime=d.get("required_regime"),
+            ))
+        except Exception:
+            continue
+    return out
+
+
 def classify_regime(market_summary: Optional[Dict]) -> str:
     """Deterministic regime label from EMA structure. bull/bear/range.
     Consistent with the regime gate (bear requires EMA50<EMA200)."""
@@ -255,10 +284,12 @@ def find_matching_strategy(timestamp_utc: datetime, setup_type: str, direction: 
     אסטרטגיה עם required_downtrend נבחרת רק אם market_summary מראה ירידה מאוששת.
     מחזיר None אם לא תואם לאף אחת — סטאפ "ניסיוני".
     """
-    for s in STRATEGY_LIBRARY:
+    for s in list(STRATEGY_LIBRARY) + load_discovered_strategies():
         if s.is_active_at(timestamp_utc) and s.matches_setup(setup_type, direction):
             if s.required_downtrend and not _is_confirmed_downtrend(market_summary):
                 continue  # אסטרטגיה מותנית-רג'יים, אבל לא בדאון-טרנד → דלג
+            if s.required_regime and classify_regime(market_summary) != s.required_regime:
+                continue  # discovered strategy with regime gate — wrong regime → skip
             return s
     return None
 
