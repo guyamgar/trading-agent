@@ -1,15 +1,15 @@
 {
   "scanner_status": "idle",
-  "scanner_started": "2026-06-20T20:03:30.336045",
-  "updated_at": "2026-06-21T05:29:30.229050",
-  "last_scan_at": "2026-06-20T20:08:16.666748",
-  "last_scan_result": "new_recommendation",
-  "last_scan_price": 1732.73,
+  "scanner_started": "2026-06-22T05:26:21.963811",
+  "updated_at": "2026-06-22T05:29:22.391167",
+  "last_scan_at": "2026-06-22T05:29:22.390317",
+  "last_scan_result": "hunter_error",
+  "last_scan_price": 1743.05,
   "monitor_status": "idle",
-  "monitor_started": "2026-06-21T05:29:28.933490",
-  "last_monitor_at": "2026-06-21T05:29:30.228819",
+  "monitor_started": "2026-06-22T05:27:32.026013",
+  "last_monitor_at": "2026-06-22T05:27:32.747372",
   "last_monitor_closed": 0,
-  "open_recs_count": 3,
+  "open_recs_count": 1,
   "scanner_symbol": "ETHUSDT",
   "last_scan_symbol": "ETHUSDT"
 }

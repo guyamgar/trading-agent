@@ -1,96 +1,92 @@
 {
   "Night Owl": {
-    "trades": 1,
-    "wins": 1,
-    "losses": 0,
-    "total_pnl": 0.4,
-    "best_pnl": 0.4,
-    "worst_pnl": 0.4,
-    "first_trade_at": "2026-06-18T22:34:06.837207",
-    "last_trade_at": "2026-06-18T22:34:06.837207"
-  },
-  "updated_at": "2026-06-20T18:21:46.052100",
-  "NY Counter-Trend Short": {
     "trades": 2,
-    "wins": 0,
-    "losses": 2,
-    "total_pnl": -0.967,
-    "best_pnl": -0.471,
-    "worst_pnl": -0.496,
-    "first_trade_at": "2026-06-18T22:40:50.352097",
-    "last_trade_at": "2026-06-20T02:58:44.407873",
+    "wins": 1,
+    "losses": 1,
+    "total_pnl": -0.15000000000000002,
+    "best_pnl": 0.4,
+    "worst_pnl": -0.55,
+    "first_trade_at": "2026-06-21T13:40:30.374556",
+    "last_trade_at": "2026-06-22T02:36:15.071755",
     "by_regime": {
-      "unknown": {
-        "trades": 1,
-        "wins": 0,
-        "losses": 1,
-        "total_pnl": -0.471
-      },
       "range": {
         "trades": 1,
         "wins": 0,
         "losses": 1,
-        "total_pnl": -0.496
+        "total_pnl": -0.55
       }
     }
   },
-  "Bear Short": {
+  "updated_at": "2026-06-22T04:57:30.822644",
+  "NY Pullback Trader": {
     "trades": 2,
     "wins": 1,
     "losses": 1,
-    "total_pnl": 0.26499999999999996,
-    "best_pnl": 0.73,
-    "worst_pnl": -0.465,
-    "first_trade_at": "2026-06-19T09:32:27.774166",
-    "last_trade_at": "2026-06-19T12:13:33.282437",
+    "total_pnl": -0.732,
+    "best_pnl": 0.046,
+    "worst_pnl": -0.778,
+    "first_trade_at": "2026-06-21T14:22:07.722188",
+    "last_trade_at": "2026-06-21T20:11:02.563687",
     "by_regime": {
-      "bear": {
+      "bull": {
         "trades": 2,
         "wins": 1,
         "losses": 1,
-        "total_pnl": 0.26499999999999996
+        "total_pnl": -0.732
+      }
+    }
+  },
+  "London Bouncer": {
+    "trades": 2,
+    "wins": 0,
+    "losses": 2,
+    "total_pnl": -0.994,
+    "best_pnl": -0.374,
+    "worst_pnl": -0.62,
+    "first_trade_at": "2026-06-21T15:18:35.150683",
+    "last_trade_at": "2026-06-21T15:19:22.145591",
+    "by_regime": {
+      "range": {
+        "trades": 2,
+        "wins": 0,
+        "losses": 2,
+        "total_pnl": -0.994
       }
     }
   },
   "_experimental_": {
-    "trades": 13,
+    "trades": 10,
     "wins": 7,
-    "losses": 6,
-    "total_pnl": -1.0219999999999998,
-    "best_pnl": 0.344,
-    "worst_pnl": -0.625,
-    "first_trade_at": "2026-06-19T17:14:21.609891",
-    "last_trade_at": "2026-06-20T17:50:28.928103",
+    "losses": 3,
+    "total_pnl": 0.7829999999999998,
+    "best_pnl": 0.703,
+    "worst_pnl": -0.562,
+    "first_trade_at": "2026-06-21T21:37:14.010411",
+    "last_trade_at": "2026-06-22T01:35:11.327524",
     "by_regime": {
       "range": {
-        "trades": 12,
+        "trades": 10,
         "wins": 7,
-        "losses": 5,
-        "total_pnl": -0.39699999999999974
-      },
-      "bull": {
-        "trades": 1,
-        "wins": 0,
-        "losses": 1,
-        "total_pnl": -0.625
+        "losses": 3,
+        "total_pnl": 0.7829999999999998
       }
     }
   },
-  "NY Pullback Trader": {
+  "Asian Range": {
     "trades": 1,
     "wins": 1,
     "losses": 0,
-    "total_pnl": 1.115,
-    "best_pnl": 1.115,
-    "worst_pnl": 1.115,
-    "first_trade_at": "2026-06-20T18:21:46.052082",
-    "last_trade_at": "2026-06-20T18:21:46.052082",
+    "total_pnl": 0.464,
+    "best_pnl": 0.464,
+    "worst_pnl": 0.464,
+    "first_trade_at": "2026-06-22T04:57:30.822634",
+    "last_trade_at": "2026-06-22T04:57:30.822634",
     "by_regime": {
-      "bull": {
+      "range": {
         "trades": 1,
         "wins": 1,
         "losses": 0,
-        "total_pnl": 1.115
+        "total_pnl": 0.464
       }
     }
   }
